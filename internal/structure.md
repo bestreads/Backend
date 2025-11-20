@@ -1,0 +1,9 @@
+- config:       viper config, defaults
+- database:     db init helper and database models
+- dtos:         request payload structs, response structs
+- handlers:     validate inputs, call services, handle errors, respond
+- middlewares:  auth, logging, etc
+- models:       further models
+- repositories: database access, gorm queries
+- server:       fiber setup, init, routes
+- services:     business logic, calls repos
