@@ -1,0 +1,23 @@
+name: Go Build
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: debian:latest
+    steps:
+    - name: Install git
+      run: apt-get update && apt-get install -y git
+
+    - uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25.x'
+
+    - name: Build
+      run: go build -v -buildvcs=false ./...
