@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/bestreads/Backend/internal/config"
 	"github.com/bestreads/Backend/internal/database"
@@ -13,7 +14,14 @@ import (
 func Start(cfg *config.Config, logger zerolog.Logger) {
 	app := fiber.New()
 
-	db := database.SetupDatabase(cfg)
+	db, dberr := database.SetupDatabase(cfg)
+
+	if dberr != nil {
+		logger.Fatal().Err(dberr) // warum geht das nicht?
+		os.Exit(1)
+	}
+
+	logger.Info().Msg("conected to database")
 
 	// Attach logger + db to ctx for every request
 	app.Use(middlewares.ContextMiddleware(logger, db))

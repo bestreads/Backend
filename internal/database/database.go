@@ -8,7 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func SetupDatabase(cfg *config.Config) *gorm.DB {
+func SetupDatabase(cfg *config.Config) (*gorm.DB, error) {
 	sslMode := "disable"
 	if cfg.DBSslMode {
 		sslMode = "require"
@@ -17,9 +17,6 @@ func SetupDatabase(cfg *config.Config) *gorm.DB {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", cfg.DBHost, cfg.DBUsername, cfg.DBPassword, cfg.DBName, cfg.DBPort, sslMode)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	if err != nil {
-		panic(err)
-	}
 
-	return db
+	return db, err
 }
