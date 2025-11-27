@@ -2,7 +2,6 @@ package server
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/bestreads/Backend/internal/config"
 	"github.com/bestreads/Backend/internal/database"
@@ -17,8 +16,7 @@ func Start(cfg *config.Config, logger zerolog.Logger) {
 	db, dberr := database.SetupDatabase(cfg)
 
 	if dberr != nil {
-		logger.Fatal().Err(dberr) // warum geht das nicht?
-		os.Exit(1)
+		logger.Fatal().Err(dberr).Msg("Database connection could not be established")
 	}
 
 	logger.Info().Msg("conected to database")

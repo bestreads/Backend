@@ -6,6 +6,7 @@ import (
 	"github.com/bestreads/Backend/internal/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func SetupDatabase(cfg *config.Config) (*gorm.DB, error) {
@@ -17,7 +18,11 @@ func SetupDatabase(cfg *config.Config) (*gorm.DB, error) {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", cfg.DBHost, cfg.DBUsername, cfg.DBPassword, cfg.DBName, cfg.DBPort, sslMode)
 
 	// es fängt schon wieder an
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(
+		postgres.Open(dsn),
+		&gorm.Config{Logger: logger.Default.LogMode(logger.Silent)},
+	)
+
 	if err != nil {
 		return nil, err
 	}
