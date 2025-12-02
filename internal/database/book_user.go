@@ -14,5 +14,5 @@ type RelBookUser struct {
 	Book   Book `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	BookID uint
 	State  state
-	// Rating uint // gleiches problem
+	Rating uint
 }
