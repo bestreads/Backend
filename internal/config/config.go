@@ -3,10 +3,13 @@ package config
 import (
 	"log"
 
+	"reflect"
+
 	"github.com/spf13/viper"
 )
 
 type Config struct {
+	ApiBaseURL  string `mapstructure:"API_BASE_URL"`
 	ApiPort     string `mapstructure:"API_PORT"`
 	ApiBasePath string `mapstructure:"API_BASE_PATH"`
 	DebugLevel  string `mapstructure:"DEBUG_LEVEL"`
@@ -20,6 +23,7 @@ type Config struct {
 
 func Load() *Config {
 	// Defaults
+	viper.SetDefault("API_BASE_URL", "http://localhost")
 	viper.SetDefault("API_PORT", "3000")
 	viper.SetDefault("API_BASE_PATH", "/api")
 	viper.SetDefault("DEBUG_LEVEL", "info")
@@ -38,7 +42,17 @@ func Load() *Config {
 	}
 
 	// ENV overrides file
-	viper.AutomaticEnv()
+	// Use for loop instead of AutomaticEnv() because of case sensitivity and upper case env vars
+	v := reflect.TypeOf(Config{})
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		tag := field.Tag.Get("mapstructure")
+		if tag != "" {
+			if err := viper.BindEnv(tag); err != nil {
+				log.Printf("Failed to bind ENV for %s: %v", tag, err)
+			}
+		}
+	}
 
 	var cfg Config
 	if err := viper.Unmarshal(&cfg); err != nil {

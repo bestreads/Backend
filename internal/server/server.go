@@ -7,8 +7,10 @@ import (
 	"github.com/bestreads/Backend/internal/config"
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/middlewares"
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/rs/zerolog"
+	"resty.dev/v3"
 )
 
 func Start(cfg *config.Config, logger zerolog.Logger) {
@@ -22,8 +24,16 @@ func Start(cfg *config.Config, logger zerolog.Logger) {
 
 	logger.Info().Msg("conected to database")
 
+	// Setup http client
+	httpClient := resty.New()
+	httpClient.SetDisableWarn(true) // Disable warnings, because we're sending requests from API to KC without TLS but within an isolated Docker bridge network
+	defer httpClient.Close()
+
+	// Setup validator
+	validator := validator.New(validator.WithRequiredStructEnabled())
+
 	// Attach logger + db to ctx for every request
-	app.Use(middlewares.ContextMiddleware(logger, db))
+	app.Use(middlewares.ContextMiddleware(cfg, logger, db, httpClient, validator))
 
 	setRoutes(cfg, app)
 
