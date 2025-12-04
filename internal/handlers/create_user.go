@@ -5,6 +5,7 @@ import (
 
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/middlewares"
+	"github.com/bestreads/Backend/internal/services"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
@@ -71,8 +72,17 @@ func CreateUser(c *fiber.Ctx) error {
 			})
 	}
 
-	// ToDo: Create user and retrieve user id
-	userId := 42
+	// Create user and retrieve user id
+	userId, createUserErr := services.CreateUser(ctx, *requestPayload)
+	if createUserErr != nil {
+		msg := "Failed to create user"
+		log.Error().Err(createUserErr).Msg(msg)
+
+		return c.Status(fiber.StatusInternalServerError).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: msg,
+			})
+	}
 
 	return c.Status(fiber.StatusCreated).
 		JSON(fiber.Map{
