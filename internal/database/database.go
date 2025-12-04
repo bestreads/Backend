@@ -47,15 +47,13 @@ func CreateUser(db *gorm.DB, ctx context.Context, mail string, hash string) erro
 	return gorm.G[User](db).Create(ctx, &User{Email: mail, Password_hash: hash})
 }
 
-func CreateBook
-(
+func CreateBook(
 	db *gorm.DB,
 	ctx context.Context,
 	safeIsbn string,
 	title string,
 	author string,
-	description string
-) error {
+	description string) error {
 
 	b := &Book{ISBN: safeIsbn, Title: title, Author: author, Description: description}
 	return gorm.G[Book](db).Create(ctx, b)
@@ -65,8 +63,6 @@ func CreateUserBookRel(db *gorm.DB, ctx context.Context, uid uint, bid uint, s s
 	return gorm.G[RelBookUser](db).Create(ctx, &RelBookUser{UserID: uid, BookID: bid, State: s})
 }
 
-
-
 func validateISBN(unsafeIsbn string) (string, error) {
-	return isbn
+	return unsafeIsbn, nil
 }
