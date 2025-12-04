@@ -10,4 +10,5 @@ type Book struct {
 	CoverURL    string
 	RatingAvg   float32
 	Description string
+	ReleaseDate uint
 }
