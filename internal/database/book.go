@@ -10,5 +10,5 @@ type Book struct {
 	CoverURL    string
 	RatingAvg   float32
 	Description string
-	ReleaseDate uint
+	ReleaseDate uint64 // am besten unix epoch oder so, erfordert keine speziellen datentypen
 }
