@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/bestreads/Backend/internal/config"
@@ -15,8 +16,13 @@ import (
 func Start(cfg *config.Config, logger zerolog.Logger) {
 	app := fiber.New()
 
-	// Setup db
-	db := database.SetupDatabase(cfg)
+	db, dberr := database.SetupDatabase(cfg, context.TODO())
+
+	if dberr != nil {
+		logger.Fatal().Err(dberr).Msg("Database connection could not be established")
+	}
+
+	logger.Info().Msg("conected to database")
 
 	// Setup http client
 	httpClient := resty.New()
