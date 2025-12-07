@@ -41,7 +41,7 @@ func SetupDatabase(cfg *config.Config, ctx context.Context) (*gorm.DB, error) {
 	}
 
 	if err := insertDemoData(db, ctx); err != nil {
-		return nil, err
+		println("soft error mit den demodaten")
 	}
 
 	return db, nil
