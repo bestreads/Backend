@@ -10,6 +10,12 @@ import (
 	"gorm.io/gorm/logger"
 )
 
+// db muss nicht überall als argument übergeben werden
+// es ist nicht funktional aber w/e
+var (
+	GlobalDB *gorm.DB
+)
+
 func SetupDatabase(cfg *config.Config, ctx context.Context) (*gorm.DB, error) {
 	sslMode := "disable"
 	if cfg.DBSslMode {
@@ -18,8 +24,9 @@ func SetupDatabase(cfg *config.Config, ctx context.Context) (*gorm.DB, error) {
 
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", cfg.DBHost, cfg.DBUsername, cfg.DBPassword, cfg.DBName, cfg.DBPort, sslMode)
 
-	// es fängt schon wieder an
-	db, err := gorm.Open(
+	var err error
+
+	GlobalDB, err = gorm.Open(
 		postgres.Open(dsn),
 		&gorm.Config{Logger: logger.Default.LogMode(logger.Silent)},
 	)
@@ -28,23 +35,27 @@ func SetupDatabase(cfg *config.Config, ctx context.Context) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	if err = db.AutoMigrate(&User{}); err != nil {
+	if err = GlobalDB.AutoMigrate(&User{}); err != nil {
 		return nil, err
 	}
 
-	if err = db.AutoMigrate(&Book{}); err != nil {
+	if err = GlobalDB.AutoMigrate(&Book{}); err != nil {
 		return nil, err
 	}
 
-	if err = db.AutoMigrate(&RelBookUser{}); err != nil {
+	if err = GlobalDB.AutoMigrate(&RelBookUser{}); err != nil {
 		return nil, err
 	}
 
-	if err := insertDemoData(db, ctx); err != nil {
+	if err = GlobalDB.AutoMigrate(&Post{}); err != nil {
+		return nil, err
+	}
+
+	if err := insertDemoData(GlobalDB, ctx); err != nil {
 		println("soft error mit den demodaten")
 	}
 
-	return db, nil
+	return GlobalDB, nil
 }
 
 func CreateUser(db *gorm.DB, ctx context.Context, mail string, hash string) error {
