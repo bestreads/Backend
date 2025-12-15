@@ -59,6 +59,6 @@ returned json objs mit den reviews
 POST:
 
 ```bash
-curl -v -X POST "http://localhost:3000/api/v1/post" -H "Content-Type: application/json" -d "{\"uid\": 1,\"bid\": 1,\"content\": \"awdawdawd\"}"
+curl -v -X POST "http://localhost:3000/api/v1/post" -H "Content-Type: application/json" -d "{\"uid\": 1,\"bid\": 1,\"content\": \"awdawdawd\",\"b64image\":\"AAAAAAAAAAAAA\"}"
 ```
 returned nichts bis auf 200 wenn es funktioniert hat
