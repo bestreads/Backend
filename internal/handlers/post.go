@@ -7,31 +7,51 @@ import (
 	"gorm.io/gorm"
 )
 
+type postResponse struct {
+	Uid     uint
+	Bid     uint
+	Content string
+	Image   string
+}
+
 func GetPost(c *fiber.Ctx) error {
 	log := middlewares.Logger(c.UserContext())
-	log.Info().Msg("GET demopost")
+	log.Info().Msg("GET post")
 
 	pl := struct {
 		Uid uint `json:"uid"`
 		Bid uint `json:"bid"`
 	}{}
 
-	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/400
+	// dieser parser ist eigentlich terror shit, man kann ein leeres obj ("{}") eingeben und kriegt struct {uid: 0, bid: 0} zurück xD
 	if err := c.BodyParser(&pl); err != nil {
+		log.Error().Err(err).Msg("JSON Parser Error!")
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Bad Request",
 			"message": "malformed request body (invalid json?)",
 		})
 	}
 
-	// maybe gucken, ob bid/uid nicht da sind und dann alle posts zurückgeben?
-
-	post, err := gorm.G[database.Post](database.GlobalDB).Where("uid = ? AND bid = ?", pl.Uid, pl.Bid).First(c.Context())
+	posts, err := gorm.G[database.Post](database.GlobalDB).Where("user_id = ? AND book_id = ?", pl.Uid, pl.Bid).Find(c.Context())
 	if err != nil {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(post)
+	return c.Status(fiber.StatusOK).JSON(convert(posts))
+}
+
+func convert(p []database.Post) []postResponse {
+	res := make([]postResponse, len(p))
+	for i, post := range p {
+		res[i] = postResponse{
+			Uid:     post.UserID,
+			Bid:     post.BookID,
+			Content: post.Content,
+			Image:   post.Image,
+		}
+	}
+
+	return res
 }
 
 func CreatePost(c *fiber.Ctx) error {

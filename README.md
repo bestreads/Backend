@@ -25,3 +25,40 @@ API_PORT: "3000"
 DEBUG_LEVEL: "debug"
 API_BASE_PATH: "/api"
 ```
+
+## doc
+
+### Posts
+
+GET:
+
+```bash
+curl -v -X GET "http://localhost:3000/api/v1/post" -H "Content-Type: application/json" -d "{\"uid\":1,\"bid\":1}"
+```
+
+returned json objs mit den reviews
+```json
+[
+   {
+      "Uid":1,
+      "Bid":1,
+      "Content":"testtext",
+      "Image":""
+   },
+   {
+      "Uid":1,
+      "Bid":1,
+      "Content":"awdawdawd",
+      "Image":""
+   }
+]
+```
+
+--- 
+
+POST:
+
+```bash
+curl -v -X POST "http://localhost:3000/api/v1/post" -H "Content-Type: application/json" -d "{\"uid\": 1,\"bid\": 1,\"content\": \"awdawdawd\"}"
+```
+returned nichts bis auf 200 wenn es funktioniert hat
