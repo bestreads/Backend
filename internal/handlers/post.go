@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"strconv"
+
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/middlewares"
 	"github.com/gofiber/fiber/v2"
@@ -56,13 +58,13 @@ func convert(p []database.Post) []postResponse {
 
 func CreatePost(c *fiber.Ctx) error {
 	log := middlewares.Logger(c.UserContext())
-	log.Info().Msg("POST demopost")
+	log.Info().Msg("POST post")
 
 	pl := struct {
-		Uid     uint   `json:"uid"`
-		Bid     uint   `json:"bid"`
-		Content string `json:"content"`
-		// Image   string `json:"image"`
+		Uid      uint   `json:"uid"`
+		Bid      uint   `json:"bid"`
+		Content  string `json:"content"`
+		B64Image string `json:"b64image"`
 	}{}
 
 	if err := c.BodyParser(&pl); err != nil {
@@ -72,11 +74,17 @@ func CreatePost(c *fiber.Ctx) error {
 		})
 	}
 
+	// wir speichern einfach den b64 text, ohne zu dekodieren
+	imageHash, err := database.Store(pl.B64Image)
+	if err != nil {
+		return err
+	}
+
 	post := database.Post{
 		UserID:  pl.Uid,
 		BookID:  pl.Bid,
 		Content: pl.Content,
-		// Image: pl.Image,
+		Image:   strconv.Itoa(imageHash),
 	}
 
 	if err := gorm.G[database.Post](database.GlobalDB).Create(c.Context(), &post); err != nil {
