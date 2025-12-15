@@ -9,14 +9,21 @@ import (
 
 // sachen, um bilder zu verwalten
 
-func Store(data string) (int, error) {
+type ImageType int
+
+const (
+	PostImage ImageType = iota
+	ProfileImage
+)
+
+func Store(data string, itype ImageType) (int, error) {
 	bytes := []byte(data)
 	val, err := fnv.New128a().Write(bytes)
 	if err != nil {
 		return -1, err
 	}
 
-	err = os.WriteFile(prefix(strconv.Itoa(val)), bytes, 0640)
+	err = os.WriteFile(prefix(strconv.Itoa(val), itype), bytes, 0640)
 	if err != nil {
 		return -1, err
 	}
@@ -24,12 +31,13 @@ func Store(data string) (int, error) {
 	return val, nil
 }
 
-func prefix(name string) string {
-	return fmt.Sprintf("./store/%s", name)
+func prefix(name string, itype ImageType) string {
+
+	return fmt.Sprintf("./store/%d/%s", itype, name)
 }
 
-func Retrieve(hash string) (string, error) {
-	d, err := os.ReadFile(prefix(hash))
+func Retrieve(hash string, itype ImageType) (string, error) {
+	d, err := os.ReadFile(prefix(hash, itype))
 	if err != nil {
 		return "", err
 	}

@@ -39,21 +39,31 @@ func GetPost(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(convert(posts))
+	returnData, err := convert(posts)
+	if err != nil {
+		return err
+	}
+
+	return c.Status(fiber.StatusOK).JSON(returnData)
 }
 
-func convert(p []database.Post) []postResponse {
+func convert(p []database.Post) ([]postResponse, error) {
 	res := make([]postResponse, len(p))
 	for i, post := range p {
+		imageData, err := database.Retrieve(post.Image, database.PostImage)
+		if err != nil {
+			return make([]postResponse, 0), err
+		}
+
 		res[i] = postResponse{
 			Uid:     post.UserID,
 			Bid:     post.BookID,
 			Content: post.Content,
-			Image:   post.Image,
+			Image:   imageData,
 		}
 	}
 
-	return res
+	return res, nil
 }
 
 func CreatePost(c *fiber.Ctx) error {
@@ -75,7 +85,7 @@ func CreatePost(c *fiber.Ctx) error {
 	}
 
 	// wir speichern einfach den b64 text, ohne zu dekodieren
-	imageHash, err := database.Store(pl.B64Image)
+	imageHash, err := database.Store(pl.B64Image, database.PostImage)
 	if err != nil {
 		return err
 	}
