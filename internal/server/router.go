@@ -14,4 +14,6 @@ func setRoutes(cfg *config.Config, app *fiber.App) {
 
 	v1.Get("/post", handlers.GetPost)
 	v1.Post("/post", handlers.CreatePost)
+
+	v1.Post("/user", handlers.CreateUser)
 }
