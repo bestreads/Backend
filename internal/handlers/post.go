@@ -36,12 +36,20 @@ func GetPost(c *fiber.Ctx) error {
 
 	posts, err := gorm.G[database.Post](database.GlobalDB).Where("user_id = ? AND book_id = ?", pl.Uid, pl.Bid).Find(c.Context())
 	if err != nil {
-		return err
+		log.Error().Err(err).Msg("Database query error")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Internal Server Error",
+			"message": "Internal Database Error",
+		})
 	}
 
 	returnData, err := convert(posts)
 	if err != nil {
-		return err
+		log.Error().Err(err).Msg("Image retrieval error")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Internal Server Error",
+			"message": "Internal Database Error",
+		})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(returnData)
@@ -78,6 +86,7 @@ func CreatePost(c *fiber.Ctx) error {
 	}{}
 
 	if err := c.BodyParser(&pl); err != nil {
+		log.Error().Err(err).Msg("json parsing error")
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   "Bad Request",
 			"message": "malformed request body (invalid json?)",
@@ -87,7 +96,12 @@ func CreatePost(c *fiber.Ctx) error {
 	// wir speichern einfach den b64 text, ohne zu dekodieren
 	imageHash, err := database.Store(pl.B64Image, database.PostImage)
 	if err != nil {
-		return err
+		log.Error().Err(err).Msg("file storage error")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Internal Server Error",
+			"message": "Internal Server Error",
+		})
+
 	}
 
 	post := database.Post{
@@ -98,7 +112,11 @@ func CreatePost(c *fiber.Ctx) error {
 	}
 
 	if err := gorm.G[database.Post](database.GlobalDB).Create(c.Context(), &post); err != nil {
-		return err
+		log.Error().Err(err).Msg("Database post insertion error")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   "Internal Server Error",
+			"message": "Internal Database Error",
+		})
 	}
 
 	return nil
