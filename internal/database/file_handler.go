@@ -16,7 +16,7 @@ const (
 	ProfileImage
 )
 
-func Store(data string, itype ImageType) (int, error) {
+func FileStore(data string, itype ImageType) (int, error) {
 	bytes := []byte(data)
 	val, err := fnv.New128a().Write(bytes)
 	if err != nil {
@@ -36,7 +36,7 @@ func prefix(name string, itype ImageType) string {
 	return fmt.Sprintf("./store/%d/%s", itype, name)
 }
 
-func Retrieve(hash string, itype ImageType) (string, error) {
+func FileRetrieve(hash string, itype ImageType) (string, error) {
 	d, err := os.ReadFile(prefix(hash, itype))
 	if err != nil {
 		return "", err

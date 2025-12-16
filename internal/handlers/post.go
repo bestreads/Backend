@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/bestreads/Backend/internal/database"
@@ -10,8 +11,8 @@ import (
 )
 
 type postResponse struct {
-	Uid     uint
-	Bid     uint
+	User    database.UserMeta
+	Book    database.Book
 	Content string
 	Image   string
 }
@@ -37,35 +38,31 @@ func GetPost(c *fiber.Ctx) error {
 	posts, err := gorm.G[database.Post](database.GlobalDB).Where("user_id = ? AND book_id = ?", pl.Uid, pl.Bid).Find(c.Context())
 	if err != nil {
 		log.Error().Err(err).Msg("Database query error")
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error":   "Internal Server Error",
-			"message": "Internal Database Error",
-		})
+		return returnInternalError(c)
 	}
 
 	returnData, err := convert(posts)
 	if err != nil {
 		log.Error().Err(err).Msg("Image retrieval error")
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error":   "Internal Server Error",
-			"message": "Internal Database Error",
-		})
+		return returnInternalError(c)
 	}
 
 	return c.Status(fiber.StatusOK).JSON(returnData)
 }
 
+// gerade wird das bild noch automatisch aus dem storage wieder zurückgeholt,
+// in zukunft vllt durch eine "data" api oder so
 func convert(p []database.Post) ([]postResponse, error) {
 	res := make([]postResponse, len(p))
 	for i, post := range p {
-		imageData, err := database.Retrieve(post.Image, database.PostImage)
+		imageData, err := database.FileRetrieve(post.ImageHash, database.PostImage)
 		if err != nil {
 			return make([]postResponse, 0), err
 		}
 
 		res[i] = postResponse{
-			Uid:     post.UserID,
-			Bid:     post.BookID,
+			User:    post.User,
+			Book:    post.Book,
 			Content: post.Content,
 			Image:   imageData,
 		}
@@ -76,10 +73,12 @@ func convert(p []database.Post) ([]postResponse, error) {
 
 func CreatePost(c *fiber.Ctx) error {
 	log := middlewares.Logger(c.UserContext())
-	log.Info().Msg("POST post")
+	id, err := strconv.ParseUint(c.Params("ID"), 10, 32)
+
+	log.Info().Msg(fmt.Sprintf("POST post for user %d", id))
 
 	pl := struct {
-		Uid      uint   `json:"uid"`
+		// Uid      uint   `json:"uid"` // wir müssen rausfinden, wie man das durch autorisierte routen oder so macht
 		Bid      uint   `json:"bid"`
 		Content  string `json:"content"`
 		B64Image string `json:"b64image"`
@@ -87,37 +86,41 @@ func CreatePost(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&pl); err != nil {
 		log.Error().Err(err).Msg("json parsing error")
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error":   "Bad Request",
-			"message": "malformed request body (invalid json?)",
-		})
+		return returnInternalError(c)
 	}
 
-	// wir speichern einfach den b64 text, ohne zu dekodieren
-	imageHash, err := database.Store(pl.B64Image, database.PostImage)
+	var imageHash int
+	if pl.B64Image != "" {
+		// wir speichern einfach den b64 text, ohne zu dekodieren
+		var err error
+		imageHash, err = database.FileStore(pl.B64Image, database.PostImage)
+		if err != nil {
+			log.Error().Err(err).Msg("file storage error")
+			return returnInternalError(c)
+		}
+	}
+
 	if err != nil {
-		log.Error().Err(err).Msg("file storage error")
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error":   "Internal Server Error",
-			"message": "Internal Server Error",
-		})
-
+		log.Error().Err(err).Msg("parsing id error")
+		return returnInternalError(c)
 	}
-
 	post := database.Post{
-		UserID:  pl.Uid,
-		BookID:  pl.Bid,
-		Content: pl.Content,
-		Image:   strconv.Itoa(imageHash),
+		UserID:    uint(id),
+		BookID:    pl.Bid,
+		Content:   pl.Content,
+		ImageHash: strconv.Itoa(imageHash),
 	}
 
 	if err := gorm.G[database.Post](database.GlobalDB).Create(c.Context(), &post); err != nil {
 		log.Error().Err(err).Msg("Database post insertion error")
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error":   "Internal Server Error",
-			"message": "Internal Database Error",
-		})
+		return returnInternalError(c)
 	}
 
 	return nil
+}
+
+func returnInternalError(c *fiber.Ctx) error {
+	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+		"message": "Internal Server Error",
+	})
 }
