@@ -8,11 +8,12 @@ import (
 	"gorm.io/gorm"
 )
 
-func CreateUser(ctx context.Context, email, passwordHash string) (*uint, error) {
+func CreateUser(ctx context.Context, email, username, passwordHash string) (*uint, error) {
 	db := middlewares.DB(ctx)
 
 	user := database.User{
 		Email:         email,
+		Username:      username,
 		Password_hash: passwordHash,
 	}
 
