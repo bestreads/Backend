@@ -2,9 +2,8 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"runtime"
-
-	"github.com/pkg/errors"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/bestreads/Backend/internal/dtos"
@@ -25,14 +24,14 @@ func CreateUser(ctx context.Context, user dtos.CreateUserRequest) (*uint, error)
 	// Hash password
 	passwordHash, hashingErr := argon2id.CreateHash(user.Password, &hashingParams)
 	if hashingErr != nil {
-		err := errors.Wrap(hashingErr, "failed to hash the password")
+		err := fmt.Errorf("failed to hash the password: %w", hashingErr)
 		return nil, err
 	}
 
 	// Create user entry in DB
 	userId, createUserErr := repositories.CreateUser(ctx, user.Email, user.Username, passwordHash)
 	if createUserErr != nil {
-		err := errors.Wrap(createUserErr, "failed to insert user into db")
+		err := fmt.Errorf("failed to insert user into db: %w", createUserErr)
 		return nil, err
 	}
 
