@@ -48,6 +48,16 @@ func CreateUser(c *fiber.Ctx) error {
 					}
 				}
 
+				// Check if format err is from username field
+				if e.Field() == "Username" {
+					switch e.Tag() {
+					case "required":
+						return c.Status(fiber.StatusBadRequest).
+							JSON(dtos.GenericRestErrorResponse{
+								Description: "Username is missing",
+							})
+				}
+
 				// Check if format err is from password field
 				if e.Field() == "Password" {
 					switch e.Tag() {
