@@ -13,6 +13,7 @@ import (
 type postResponse struct {
 	Pfp      string
 	Username string
+	Uid      uint
 	Book     database.Book
 	Content  string
 	Image    string
@@ -72,6 +73,7 @@ func convert(p []database.Post) ([]postResponse, error) {
 		res[i] = postResponse{
 			Pfp:      post.User.Pfp,
 			Username: post.User.Username,
+			Uid:      post.User.ID,
 			Book:     post.Book,
 			Content:  post.Content,
 			Image:    imageData,

@@ -42,6 +42,7 @@ returned json objs mit den reviews
    {
       "Pfp":"",
       "Username":"",
+      "Uid": "2",
       "Book":{
          "ID":2,
          "ISBN":"978-0-439-02341-2",
@@ -66,6 +67,4 @@ POST:
 id=1
 curl -v -X POST "http://localhost:3000/api/v1/user/$id/post" -H "Content-Type: application/json" -d "{\"bid\": 1,\"content\": \"awdawdawd\",\"b64image\":\"AAAAAAAAAAAAA\"}"
 ```
-`b64image` ist optional (kann leer sein)
-
 returned nichts bis auf 200 wenn es funktioniert hat
