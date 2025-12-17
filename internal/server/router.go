@@ -11,6 +11,7 @@ func setRoutes(cfg *config.Config, app *fiber.App) {
 	v1 := basePath.Group("/v1")
 
 	v1.Get("/health", handlers.Health)
+	v1.Get("/books/search", handlers.BookSearch)
 
 	v1.Post("/user", handlers.CreateUser)
 }
