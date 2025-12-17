@@ -72,7 +72,19 @@ func validateISBN(unsafeIsbn string) (string, error) {
 	return unsafeIsbn, nil
 }
 
+func SearchBooks(db *gorm.DB, ctx context.Context, query string) ([]Book, error) {
+	var books []Book
+	err := db.WithContext(ctx).Where("LOWER(title) LIKE LOWER(?) OR LOWER(author) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?)", "%"+query+"%", "%"+query+"%", "%"+query+"%").Find(&books).Error
+	return books, err
+}
+
 func insertDemoData(db *gorm.DB, ctx context.Context) error {
+	// Check if demo data already exists
+	var userCount int64
+	db.WithContext(ctx).Model(&User{}).Count(&userCount)
+	if userCount > 0 {
+		return nil // Demo data already inserted
+	}
 
 	for i := range 10 {
 		if err := CreateUser(db, ctx, fmt.Sprintf("%d@test.com", i), "aaaaaaaaaaa"); err != nil {
