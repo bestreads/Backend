@@ -98,16 +98,19 @@ curl -X GET "http://localhost:8080/api/v1/health" \
 ## Search Behavior
 
 ### Local Search First
+
 - The API searches the local PostgreSQL database first
 - Searches across `title`, `author`, and `description` fields
 - Case-insensitive pattern matching
 
 ### Open Library Fallback
+
 - If no local results are found, the API queries the Open Library API
 - Returns up to 10 results by default
 - External results have `ID: 0` to indicate they're not from local database
 
 ### Combined Results
+
 - Results from both sources are returned in a single array
 - Local results typically appear first
 
@@ -169,9 +172,10 @@ curl -s "http://localhost:8080/api/v1/books/search?q=978-0-439"
 ## Implementation Details
 
 ### Technology Stack
+
 - **Framework:** Fiber (Go)
 - **Database:** PostgreSQL with GORM
-- **External API:** Open Library API (https://openlibrary.org/search.json)
+- **External API:** Open Library API (<https://openlibrary.org/search.json>)
 - **HTTP Client:** Resty
 
 ### Search Query
@@ -187,11 +191,13 @@ WHERE LOWER(title) LIKE LOWER(?)
 ### Logging
 
 All requests and errors are logged using Zerolog with the following levels:
+
 - `INFO` - Successful searches
 - `WARN` - Missing query parameters
 - `ERROR` - Search failures
 
 Each log entry includes:
+
 - Request ID
 - Timestamp
 - Caller information
@@ -202,8 +208,9 @@ Each log entry includes:
 The API is documented using OpenAPI 3.0.0. You can find the specification in `docs/swagger.yaml`.
 
 To view the interactive documentation:
+
 1. Use Swagger UI with the `docs/swagger.yaml` file
-2. Or visit: https://editor.swagger.io and import the YAML file
+2. Or visit: <https://editor.swagger.io> and import the YAML file
 
 ## Future Enhancements
 
