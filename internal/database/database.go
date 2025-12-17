@@ -21,7 +21,10 @@ func SetupDatabase(cfg *config.Config, ctx context.Context) (*gorm.DB, error) {
 	// es fängt schon wieder an
 	db, err := gorm.Open(
 		postgres.Open(dsn),
-		&gorm.Config{Logger: logger.Default.LogMode(logger.Silent)},
+		&gorm.Config{
+			Logger:         logger.Default.LogMode(logger.Silent),
+			TranslateError: true,
+		},
 	)
 
 	if err != nil {
