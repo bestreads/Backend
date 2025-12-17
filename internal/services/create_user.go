@@ -2,8 +2,9 @@ package services
 
 import (
 	"context"
-	"errors"
 	"runtime"
+
+	"github.com/pkg/errors"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/bestreads/Backend/internal/dtos"
@@ -11,8 +12,6 @@ import (
 )
 
 var (
-	ErrHashingPassword = errors.New("failed to hash the password")
-
 	hashingParams = argon2id.Params{
 		Memory:      256 * 1024,
 		Iterations:  2,
@@ -22,16 +21,20 @@ var (
 	}
 )
 
-func CreateUser(ctx context.Context, user dtos.CreateUserRequest) (uint, error) {
+func CreateUser(ctx context.Context, user dtos.CreateUserRequest) (*uint, error) {
 	// Hash password
 	passwordHash, hashingErr := argon2id.CreateHash(user.Password, &hashingParams)
 	if hashingErr != nil {
-		err := errors.Join(ErrHashingPassword, hashingErr)
-		return 0, err
+		err := errors.Wrap(hashingErr, "failed to hash the password")
+		return nil, err
 	}
 
 	// Create user entry in DB
 	userId, createUserErr := repositories.CreateUser(ctx, user.Email, passwordHash)
+	if createUserErr != nil {
+		err := errors.Wrap(createUserErr, "failed to insert user into db")
+		return nil, err
+	}
 
-	return *userId, createUserErr
+	return userId, nil
 }
