@@ -14,7 +14,7 @@ import (
 var (
 	hashingParams = argon2id.Params{
 		Memory:      256 * 1024,
-		Iterations:  2,
+		Iterations:  3,
 		Parallelism: uint8(runtime.NumCPU()),
 		SaltLength:  32,
 		KeyLength:   32,
