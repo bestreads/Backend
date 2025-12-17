@@ -8,6 +8,7 @@ import (
 	"github.com/bestreads/Backend/internal/services"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 func CreateUser(c *fiber.Ctx) error {
@@ -75,6 +76,15 @@ func CreateUser(c *fiber.Ctx) error {
 	// Create user and retrieve user id
 	userId, createUserErr := services.CreateUser(ctx, *requestPayload)
 	if createUserErr != nil {
+		if errors.Is(createUserErr, gorm.ErrDuplicatedKey) {
+			msg := "User already exists"
+			log.Debug().Err(createUserErr).Msg(msg)
+			return c.Status(fiber.StatusConflict).
+				JSON(dtos.GenericRestErrorResponse{
+					Description: msg,
+				})
+		}
+
 		msg := "Failed to create user"
 		log.Error().Err(createUserErr).Msg(msg)
 
@@ -86,6 +96,6 @@ func CreateUser(c *fiber.Ctx) error {
 
 	return c.Status(fiber.StatusCreated).
 		JSON(fiber.Map{
-			"user_id": userId,
+			"userId": userId,
 		})
 }

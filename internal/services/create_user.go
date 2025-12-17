@@ -7,6 +7,7 @@ import (
 
 	"github.com/alexedwards/argon2id"
 	"github.com/bestreads/Backend/internal/dtos"
+	"github.com/bestreads/Backend/internal/repositories"
 )
 
 var (
@@ -29,11 +30,8 @@ func CreateUser(ctx context.Context, user dtos.CreateUserRequest) (uint, error) 
 		return 0, err
 	}
 
-	// ToDo: Save user to database
-	_ = passwordHash
+	// Create user entry in DB
+	userId, createUserErr := repositories.CreateUser(ctx, user.Email, passwordHash)
 
-	// ToDo: Get user ID from db
-	var userId uint = 42
-
-	return userId, nil
+	return *userId, createUserErr
 }
