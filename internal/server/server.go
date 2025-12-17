@@ -21,7 +21,7 @@ func Start(cfg *config.Config, logger zerolog.Logger) {
 		logger.Fatal().Err(dbErr).Msg("Database connection could not be established")
 	}
 
-	logger.Info().Msg("conected to database")
+	logger.Info().Msg("connected to database")
 
 	// Setup http client
 	httpClient := resty.New()
