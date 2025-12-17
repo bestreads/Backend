@@ -30,7 +30,7 @@ func CreateUser(ctx context.Context, user dtos.CreateUserRequest) (*uint, error)
 	}
 
 	// Create user entry in DB
-	userId, createUserErr := repositories.CreateUser(ctx, user.Email, passwordHash)
+	userId, createUserErr := repositories.CreateUser(ctx, user.Username, user.Email, passwordHash)
 	if createUserErr != nil {
 		err := errors.Wrap(createUserErr, "failed to insert user into db")
 		return nil, err
