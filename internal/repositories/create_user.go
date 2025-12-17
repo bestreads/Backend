@@ -18,7 +18,6 @@ func CreateUser(ctx context.Context, email, passwordHash string) (*uint, error) 
 
 	createUserErr := gorm.G[database.User](db).
 		Create(ctx, &user)
-
 	if createUserErr != nil {
 		return nil, createUserErr
 	}
