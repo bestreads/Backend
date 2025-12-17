@@ -35,19 +35,7 @@ func SetupDatabase(cfg *config.Config, ctx context.Context) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	if err = GlobalDB.AutoMigrate(&User{}); err != nil {
-		return nil, err
-	}
-
-	if err = GlobalDB.AutoMigrate(&Book{}); err != nil {
-		return nil, err
-	}
-
-	if err = GlobalDB.AutoMigrate(&RelBookUser{}); err != nil {
-		return nil, err
-	}
-
-	if err = GlobalDB.AutoMigrate(&Post{}); err != nil {
+	if err = GlobalDB.AutoMigrate(&User{}, &Book{}, &RelBookUser{}, &Post{}); err != nil {
 		return nil, err
 	}
 
