@@ -16,10 +16,9 @@ import (
 func Start(cfg *config.Config, logger zerolog.Logger) {
 	app := fiber.New()
 
-	db, dberr := database.SetupDatabase(cfg, context.TODO())
-
-	if dberr != nil {
-		logger.Fatal().Err(dberr).Msg("Database connection could not be established")
+	db, dbErr := database.SetupDatabase(cfg, context.TODO())
+	if dbErr != nil {
+		logger.Fatal().Err(dbErr).Msg("Database connection could not be established")
 	}
 
 	logger.Info().Msg("conected to database")
