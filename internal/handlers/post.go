@@ -4,20 +4,10 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/middlewares"
+	"github.com/bestreads/Backend/internal/services"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
-
-type postResponse struct {
-	Pfp      string
-	Username string
-	Uid      uint
-	Book     database.Book
-	Content  string
-	Image    string
-}
 
 func GetPost(c *fiber.Ctx) error {
 	log := middlewares.Logger(c.UserContext())
@@ -37,50 +27,13 @@ func GetPost(c *fiber.Ctx) error {
 		})
 	}
 
-	// wichtige informationen:
-	// 1. den namen der preload dinger *RICHTIG* zu schreiben (auch groß- und kleinschreibung)
-	// 2. gorm wird (sporadisch) andere sachen preloaden, keine ahnung wieso?
-	// 3. eigentlich wollte ich eine api machen, mit der man nur die metadaten von einem user lädt.
-	//    würde ein bisschen hübscher in json aussehen, das habe ich aber mal nicht gemacht
-	posts, err := gorm.G[database.Post](database.GlobalDB).Preload("User", nil).Preload("Book", nil).Where("user_id = ? AND book_id = ?", pl.Uid, pl.Bid).Find(c.Context())
+	posts, err := services.GetPost(c, pl.Uid, pl.Bid)
 	if err != nil {
-		log.Error().Err(err).Msg("Database query error")
+		log.Error().Err(err).Msg("error getting posts")
 		return returnInternalError(c)
 	}
 
-	returnData, err := convert(posts)
-	if err != nil {
-		log.Error().Err(err).Msg("Image retrieval error")
-		return returnInternalError(c)
-	}
-
-	return c.Status(fiber.StatusOK).JSON(returnData)
-}
-
-// gerade wird das bild noch automatisch aus dem storage wieder zurückgeholt,
-// in zukunft vllt durch eine "data" api oder so
-//
-// man müsste das hier eig auch wegmachen und durch verschachtelte structs
-// (sachen mit FKs in der db) machen
-func convert(p []database.Post) ([]postResponse, error) {
-	res := make([]postResponse, len(p))
-	for i, post := range p {
-		imageData, err := database.FileRetrieve(post.ImageHash, database.PostImage)
-		if err != nil {
-			return make([]postResponse, 0), err
-		}
-
-		res[i] = postResponse{
-			Pfp:      post.User.Pfp,
-			Username: post.User.Username,
-			Uid:      post.User.ID,
-			Book:     post.Book,
-			Content:  post.Content,
-			Image:    imageData,
-		}
-	}
-
-	return res, nil
+	return c.Status(fiber.StatusOK).JSON(posts)
 }
 
 func CreatePost(c *fiber.Ctx) error {
@@ -105,22 +58,8 @@ func CreatePost(c *fiber.Ctx) error {
 		return returnInternalError(c)
 	}
 
-	// leeres bild wird einfach "0", das ist okay glaube ich
-	hash, err := database.FileStore(pl.B64Image, database.PostImage)
-	if err != nil {
-		log.Error().Err(err).Msg("file storage error")
-		return returnInternalError(c)
-	}
-
-	post := database.Post{
-		UserID:    uint(id),
-		BookID:    pl.Bid,
-		Content:   pl.Content,
-		ImageHash: strconv.Itoa(hash),
-	}
-
-	if err := gorm.G[database.Post](database.GlobalDB).Create(c.Context(), &post); err != nil {
-		log.Error().Err(err).Msg("Database post insertion error")
+	if err = services.CreatePost(c, uint(id), pl.Bid, pl.Content, pl.B64Image); err != nil {
+		log.Error().Err(err).Msg("error creating post")
 		return returnInternalError(c)
 	}
 
