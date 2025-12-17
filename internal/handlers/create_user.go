@@ -56,6 +56,7 @@ func CreateUser(c *fiber.Ctx) error {
 							JSON(dtos.GenericRestErrorResponse{
 								Description: "Username is missing",
 							})
+					}
 				}
 
 				// Check if format err is from password field
