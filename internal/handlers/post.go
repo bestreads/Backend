@@ -11,10 +11,11 @@ import (
 )
 
 type postResponse struct {
-	User    database.UserMeta
-	Book    database.Book
-	Content string
-	Image   string
+	Pfp      string
+	Username string
+	Book     database.Book
+	Content  string
+	Image    string
 }
 
 func GetPost(c *fiber.Ctx) error {
@@ -35,7 +36,12 @@ func GetPost(c *fiber.Ctx) error {
 		})
 	}
 
-	posts, err := gorm.G[database.Post](database.GlobalDB).Where("user_id = ? AND book_id = ?", pl.Uid, pl.Bid).Find(c.Context())
+	// wichtige informationen:
+	// 1. den namen der preload dinger *RICHTIG* zu schreiben (auch groß- und kleinschreibung)
+	// 2. gorm wird (sporadisch) andere sachen preloaden, keine ahnung wieso?
+	// 3. eigentlich wollte ich eine api machen, mit der man nur die metadaten von einem user lädt.
+	//    würde ein bisschen hübscher in json aussehen, das habe ich aber mal nicht gemacht
+	posts, err := gorm.G[database.Post](database.GlobalDB).Preload("User", nil).Preload("Book", nil).Where("user_id = ? AND book_id = ?", pl.Uid, pl.Bid).Find(c.Context())
 	if err != nil {
 		log.Error().Err(err).Msg("Database query error")
 		return returnInternalError(c)
@@ -52,6 +58,9 @@ func GetPost(c *fiber.Ctx) error {
 
 // gerade wird das bild noch automatisch aus dem storage wieder zurückgeholt,
 // in zukunft vllt durch eine "data" api oder so
+//
+// man müsste das hier eig auch wegmachen und durch verschachtelte structs
+// (sachen mit FKs in der db) machen
 func convert(p []database.Post) ([]postResponse, error) {
 	res := make([]postResponse, len(p))
 	for i, post := range p {
@@ -61,10 +70,11 @@ func convert(p []database.Post) ([]postResponse, error) {
 		}
 
 		res[i] = postResponse{
-			User:    post.User,
-			Book:    post.Book,
-			Content: post.Content,
-			Image:   imageData,
+			Pfp:      post.User.Pfp,
+			Username: post.User.Username,
+			Book:     post.Book,
+			Content:  post.Content,
+			Image:    imageData,
 		}
 	}
 
@@ -73,12 +83,16 @@ func convert(p []database.Post) ([]postResponse, error) {
 
 func CreatePost(c *fiber.Ctx) error {
 	log := middlewares.Logger(c.UserContext())
+
 	id, err := strconv.ParseUint(c.Params("ID"), 10, 32)
+	if err != nil {
+		log.Error().Err(err).Msg("parsing id error")
+		return returnInternalError(c)
+	}
 
 	log.Info().Msg(fmt.Sprintf("POST post for user %d", id))
 
 	pl := struct {
-		// Uid      uint   `json:"uid"` // wir müssen rausfinden, wie man das durch autorisierte routen oder so macht
 		Bid      uint   `json:"bid"`
 		Content  string `json:"content"`
 		B64Image string `json:"b64image"`
@@ -89,26 +103,18 @@ func CreatePost(c *fiber.Ctx) error {
 		return returnInternalError(c)
 	}
 
-	var imageHash int
-	if pl.B64Image != "" {
-		// wir speichern einfach den b64 text, ohne zu dekodieren
-		var err error
-		imageHash, err = database.FileStore(pl.B64Image, database.PostImage)
-		if err != nil {
-			log.Error().Err(err).Msg("file storage error")
-			return returnInternalError(c)
-		}
-	}
-
+	// leeres bild wird einfach "0", das ist okay glaube ich
+	hash, err := database.FileStore(pl.B64Image, database.PostImage)
 	if err != nil {
-		log.Error().Err(err).Msg("parsing id error")
+		log.Error().Err(err).Msg("file storage error")
 		return returnInternalError(c)
 	}
+
 	post := database.Post{
 		UserID:    uint(id),
 		BookID:    pl.Bid,
 		Content:   pl.Content,
-		ImageHash: strconv.Itoa(imageHash),
+		ImageHash: strconv.Itoa(hash),
 	}
 
 	if err := gorm.G[database.Post](database.GlobalDB).Create(c.Context(), &post); err != nil {
