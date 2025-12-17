@@ -28,14 +28,14 @@ func SetupDatabase(cfg *config.Config, ctx context.Context) (*gorm.DB, error) {
 
 	GlobalDB, err = gorm.Open(
 		postgres.Open(dsn),
-		&gorm.Config{Logger: logger.Default.LogMode(logger.Silent)},
+		&gorm.Config{Logger: logger.Default.LogMode(logger.Info)},
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if err = GlobalDB.AutoMigrate(&User{}, &UserMeta{}); err != nil {
+	if err = GlobalDB.AutoMigrate(&User{}); err != nil {
 		return nil, err
 	}
 

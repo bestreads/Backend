@@ -17,6 +17,11 @@ const (
 )
 
 func FileStore(data string, itype ImageType) (int, error) {
+	// schneller pfad, kein fs-aufruf
+	if data == "" {
+		return 0, nil
+	}
+
 	bytes := []byte(data)
 	val, err := fnv.New128a().Write(bytes)
 	if err != nil {
@@ -31,12 +36,11 @@ func FileStore(data string, itype ImageType) (int, error) {
 	return val, nil
 }
 
-func prefix(name string, itype ImageType) string {
-
-	return fmt.Sprintf("./store/%d/%s", itype, name)
-}
-
 func FileRetrieve(hash string, itype ImageType) (string, error) {
+	// auch schneller pfad
+	if hash == "0" {
+		return "", nil
+	}
 	d, err := os.ReadFile(prefix(hash, itype))
 	if err != nil {
 		return "", err
@@ -44,4 +48,8 @@ func FileRetrieve(hash string, itype ImageType) (string, error) {
 
 	return string(d), nil
 
+}
+
+func prefix(name string, itype ImageType) string {
+	return fmt.Sprintf("./store/%d/%s", itype, name)
 }

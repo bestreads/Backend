@@ -40,16 +40,20 @@ returned json objs mit den reviews
 ```json
 [
    {
-      "Uid":1,
-      "Bid":1,
-      "Content":"testtext",
-      "Image":""
-   },
-   {
-      "Uid":1,
-      "Bid":1,
+      "Pfp":"",
+      "Username":"",
+      "Book":{
+         "ID":2,
+         "ISBN":"978-0-439-02341-2",
+         "Title":"test1",
+         "Author":"test1",
+         "CoverURL":"",
+         "RatingAvg":0,
+         "Description":"test1",
+         "ReleaseDate":1
+      },
       "Content":"awdawdawd",
-      "Image":""
+      "Image":"AAAAAAAAAAAAA"
    }
 ]
 ```
