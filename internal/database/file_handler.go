@@ -1,0 +1,55 @@
+package database
+
+import (
+	"fmt"
+	"hash/fnv"
+	"os"
+	"strconv"
+)
+
+// sachen, um bilder zu verwalten
+
+type ImageType int
+
+const (
+	PostImage ImageType = iota
+	ProfileImage
+)
+
+func FileStore(data string, itype ImageType) (int, error) {
+	// schneller pfad, kein fs-aufruf
+	if data == "" {
+		return 0, nil
+	}
+
+	bytes := []byte(data)
+	val, err := fnv.New128a().Write(bytes)
+	if err != nil {
+		return -1, err
+	}
+
+	err = os.WriteFile(prefix(strconv.Itoa(val), itype), bytes, 0640)
+	if err != nil {
+		return -1, err
+	}
+
+	return val, nil
+}
+
+func FileRetrieve(hash string, itype ImageType) (string, error) {
+	// auch schneller pfad
+	if hash == "0" {
+		return "", nil
+	}
+	d, err := os.ReadFile(prefix(hash, itype))
+	if err != nil {
+		return "", err
+	}
+
+	return string(d), nil
+
+}
+
+func prefix(name string, itype ImageType) string {
+	return fmt.Sprintf("./store/%d/%s", itype, name)
+}
