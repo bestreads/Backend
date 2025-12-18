@@ -22,9 +22,8 @@ func GetPost(c *fiber.Ctx) error {
 	// dieser parser ist eigentlich terror shit, man kann ein leeres obj ("{}") eingeben und kriegt struct {uid: 0, bid: 0} zurück xD
 	if err := c.BodyParser(&pl); err != nil {
 		log.Error().Err(err).Msg("JSON Parser Error!")
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error":   "Bad Request",
-			"message": "malformed request body (invalid json?)",
+		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
+			Description: "JSON invalid",
 		})
 	}
 
@@ -56,7 +55,10 @@ func CreatePost(c *fiber.Ctx) error {
 
 	if err := c.BodyParser(&pl); err != nil {
 		log.Error().Err(err).Msg("json parsing error")
-		return returnInternalError(c)
+		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
+			Description: "JSON invalid",
+		})
+
 	}
 
 	if err = services.CreatePost(c, uint(id), pl.Bid, pl.Content, pl.B64Image); err != nil {
