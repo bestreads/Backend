@@ -4,22 +4,12 @@ import (
 	"context"
 
 	"github.com/bestreads/Backend/internal/database"
+	"github.com/bestreads/Backend/internal/dtos"
 	"resty.dev/v3"
 )
 
-type OpenLibraryBook struct {
-	Title      string   `json:"title"`
-	AuthorName []string `json:"author_name"`
-	ISBN       []string `json:"isbn"`
-	FirstYear  int      `json:"first_publish_year"`
-}
-
-type OpenLibraryResponse struct {
-	Docs []OpenLibraryBook `json:"docs"`
-}
-
 func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query string) ([]database.Book, error) {
-	var response OpenLibraryResponse
+	var response dtos.OpenLibraryResponse
 
 	_, err := httpClient.R().
 		SetContext(ctx).
