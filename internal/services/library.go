@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/dtos"
@@ -32,4 +33,24 @@ func convertLibtoResp(p []database.Library) ([]dtos.LibraryResponse, error) {
 	}
 
 	return res, nil
+}
+
+func UpdateReadState(ctx context.Context, uid uint, bid uint, state database.ReadState) error {
+	c, e := repositories.UpdateReadState(ctx, uid, bid, state)
+	if c > 1 {
+		fmt.Printf("uid: %d, bid: %d, state: %v, rows updated(!) > 1: %d\n", uid, bid, state, c)
+		panic("THIS SHOULD NEVER HAPPEN")
+	}
+
+	return e
+}
+
+func DeleteFromLibrary(ctx context.Context, uid uint, bid uint) error {
+	c, e := repositories.DeleteFromLibrary(ctx, uid, bid)
+	if c > 1 {
+		fmt.Printf("uid: %d, bid: %d, rows updated(!) > 1: %d\n", uid, bid, c)
+		panic("THIS SHOULD NEVER HAPPEN")
+	}
+
+	return e
 }

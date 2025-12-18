@@ -27,3 +27,14 @@ func QueryLibraryDb(ctx context.Context, uid uint, limit uint64) ([]database.Lib
 		Where("user_id = ?", uid).
 		Find(ctx)
 }
+
+func UpdateReadState(ctx context.Context, uid uint, bid uint, state database.ReadState) (int, error) {
+	count, err := gorm.G[database.Library](middlewares.DB(ctx)).
+		Where("user_id = ? AND book_id = ?", uid, bid).
+		Update(ctx, "state", state)
+	return count, err
+}
+
+func DeleteFromLibrary(ctx context.Context, uid uint, bid uint) (int, error) {
+	return gorm.G[database.Library](middlewares.DB(ctx)).Where("user_id = ? AND book_ID = ?", uid, bid).Delete(ctx)
+}

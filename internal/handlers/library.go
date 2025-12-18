@@ -75,9 +75,67 @@ func AddToLibrary(c *fiber.Ctx) error {
 }
 
 func UpdateReadingStatus(c *fiber.Ctx) error {
+	log := middlewares.Logger(c.UserContext())
+
+	id, err := strconv.ParseUint(c.Params("ID"), 10, 32)
+	if err != nil {
+		log.Error().Err(err).Msg("parsing id error")
+		return err
+	}
+
+	bid, err := strconv.ParseUint(c.Params("BID"), 10, 32)
+	if err != nil {
+		log.Error().Err(err).Msg("parsing bookid error")
+		return err
+	}
+
+	log.Info().Msg(fmt.Sprintf("updating state for user %d on book %d", id, bid))
+
+	pl := struct {
+		State database.ReadState `json:"state"`
+	}{}
+
+	if err := c.BodyParser(&pl); err != nil {
+		log.Error().Err(err).Msg("json parser error")
+		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
+			Description: "JSON invalid",
+		})
+	}
+
+	if err := services.UpdateReadState(c.UserContext(), uint(id), uint(bid), pl.State); err != nil {
+		log.Error().Err(err).Msg("error updating statee")
+		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
+			Description: "error updating state",
+		})
+
+	}
+
 	return nil
 }
 
 func DeleteFromLibrary(c *fiber.Ctx) error {
+	log := middlewares.Logger(c.UserContext())
+	id, err := strconv.ParseUint(c.Params("ID"), 10, 32)
+	if err != nil {
+		log.Error().Err(err).Msg("parsing id error")
+		return err
+	}
+
+	bid, err := strconv.ParseUint(c.Params("BID"), 10, 32)
+	if err != nil {
+		log.Error().Err(err).Msg("parsing bookid error")
+		return err
+	}
+
+	log.Info().Msg(fmt.Sprintf("deleting book for user %d on book %d", id, bid))
+
+	if err := services.DeleteFromLibrary(c.UserContext(), uint(id), uint(bid)); err != nil {
+		log.Error().Err(err).Msg("error deleting book from lib")
+		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
+			Description: "error deleting book from library",
+		})
+
+	}
+
 	return nil
 }
