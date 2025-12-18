@@ -19,4 +19,10 @@ func setRoutes(cfg *config.Config, app *fiber.App) {
 
 	v1user := v1.Group("/user/:ID") // vllt hier so eine auth middleware
 	v1user.Post("/post", handlers.CreatePost)
+
+	// ?limit=n
+	v1user.Get("/lib", handlers.GetLibrary)
+	v1user.Post("/lib", handlers.AddToLibrary)
+	v1user.Put("/lib/:BID", handlers.UpdateReadingStatus)
+	v1user.Delete("/lib/:BID", handlers.DeleteFromLibrary)
 }
