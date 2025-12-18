@@ -28,7 +28,11 @@ func SetupDatabase(cfg *config.Config, ctx context.Context) (*gorm.DB, error) {
 
 	db, err = gorm.Open(
 		postgres.Open(dsn),
-		&gorm.Config{Logger: logger.Default.LogMode(logger.Info)},
+
+		&gorm.Config{
+			Logger:         logger.Default.LogMode(logger.Silent),
+			TranslateError: true,
+		},
 	)
 
 	if err != nil {
@@ -42,6 +46,7 @@ func SetupDatabase(cfg *config.Config, ctx context.Context) (*gorm.DB, error) {
 	if err := insertDemoData(db, ctx); err != nil {
 		println("soft error mit den demodaten")
 	}
+
 
 	return db, nil
 }
@@ -72,6 +77,12 @@ func validateISBN(unsafeIsbn string) (string, error) {
 }
 
 func insertDemoData(db *gorm.DB, ctx context.Context) error {
+	// Check if demo data already exists
+	var userCount int64
+	db.WithContext(ctx).Model(&User{}).Count(&userCount)
+	if userCount > 0 {
+		return nil // Demo data already inserted
+	}
 
 	for i := range 10 {
 		if err := CreateUser(db, ctx, fmt.Sprintf("%d@test.com", i), "aaaaaaaaaaa"); err != nil {

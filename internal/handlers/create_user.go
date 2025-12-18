@@ -5,8 +5,10 @@ import (
 
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/middlewares"
+	"github.com/bestreads/Backend/internal/services"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
 )
 
 func CreateUser(c *fiber.Ctx) error {
@@ -46,6 +48,17 @@ func CreateUser(c *fiber.Ctx) error {
 					}
 				}
 
+				// Check if format err is from username field
+				if e.Field() == "Username" {
+					switch e.Tag() {
+					case "required":
+						return c.Status(fiber.StatusBadRequest).
+							JSON(dtos.GenericRestErrorResponse{
+								Description: "Username is missing",
+							})
+					}
+				}
+
 				// Check if format err is from password field
 				if e.Field() == "Password" {
 					switch e.Tag() {
@@ -71,11 +84,29 @@ func CreateUser(c *fiber.Ctx) error {
 			})
 	}
 
-	// ToDo: Create user and retrieve user id
-	userId := 42
+	// Create user and retrieve user id
+	userId, createUserErr := services.CreateUser(ctx, *requestPayload)
+	if createUserErr != nil {
+		if errors.Is(createUserErr, gorm.ErrDuplicatedKey) {
+			msg := "User already exists"
+			log.Debug().Err(createUserErr).Msg(msg)
+			return c.Status(fiber.StatusConflict).
+				JSON(dtos.GenericRestErrorResponse{
+					Description: msg,
+				})
+		}
+
+		msg := "Failed to create user"
+		log.Error().Err(createUserErr).Msg(msg)
+
+		return c.Status(fiber.StatusInternalServerError).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: msg,
+			})
+	}
 
 	return c.Status(fiber.StatusCreated).
 		JSON(fiber.Map{
-			"user_id": userId,
+			"userId": *userId,
 		})
 }
