@@ -13,7 +13,7 @@ import (
 // db muss nicht überall als argument übergeben werden
 // es ist nicht funktional aber w/e
 var (
-	GlobalDB *gorm.DB
+	db *gorm.DB
 )
 
 func SetupDatabase(cfg *config.Config, ctx context.Context) (*gorm.DB, error) {
@@ -26,7 +26,7 @@ func SetupDatabase(cfg *config.Config, ctx context.Context) (*gorm.DB, error) {
 
 	var err error
 
-	GlobalDB, err = gorm.Open(
+	db, err = gorm.Open(
 		postgres.Open(dsn),
 		&gorm.Config{Logger: logger.Default.LogMode(logger.Info)},
 	)
@@ -35,15 +35,15 @@ func SetupDatabase(cfg *config.Config, ctx context.Context) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	if err = GlobalDB.AutoMigrate(&User{}, &Book{}, &RelBookUser{}, &Post{}); err != nil {
+	if err = db.AutoMigrate(&User{}, &Book{}, &Library{}, &Post{}); err != nil {
 		return nil, err
 	}
 
-	if err := insertDemoData(GlobalDB, ctx); err != nil {
+	if err := insertDemoData(db, ctx); err != nil {
 		println("soft error mit den demodaten")
 	}
 
-	return GlobalDB, nil
+	return db, nil
 }
 
 func CreateUser(db *gorm.DB, ctx context.Context, mail string, hash string) error {
@@ -64,7 +64,7 @@ func CreateBook(
 }
 
 func CreateUserBookRel(db *gorm.DB, ctx context.Context, uid uint, bid uint, s state) error {
-	return gorm.G[RelBookUser](db).Create(ctx, &RelBookUser{UserID: uid, BookID: bid, State: s})
+	return gorm.G[Library](db).Create(ctx, &Library{UserID: uid, BookID: bid, State: s})
 }
 
 func validateISBN(unsafeIsbn string) (string, error) {

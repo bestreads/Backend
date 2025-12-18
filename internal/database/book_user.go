@@ -8,7 +8,7 @@ const (
 	Read
 )
 
-type RelBookUser struct {
+type Library struct {
 	User   User `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	UserID uint
 	Book   Book `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
