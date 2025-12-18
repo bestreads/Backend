@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/middlewares"
+	"github.com/bestreads/Backend/internal/repositories"
 	"github.com/bestreads/Backend/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
@@ -24,7 +24,7 @@ func BookSearch(c *fiber.Ctx) error {
 	log.Info().Str("query", query).Msg("Searching for books")
 
 	// Search in the database
-	books, err := database.SearchBooks(db, ctx, query)
+	books, err := repositories.SearchBooks(db, ctx, query)
 	if err != nil {
 		log.Error().Err(err).Msg("Error searching in database")
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
