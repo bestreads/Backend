@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/middlewares"
 	"github.com/bestreads/Backend/internal/services"
 	"github.com/gofiber/fiber/v2"
@@ -67,7 +68,8 @@ func CreatePost(c *fiber.Ctx) error {
 }
 
 func returnInternalError(c *fiber.Ctx) error {
-	return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-		"message": "Internal Server Error",
-	})
+	return c.Status(fiber.StatusInternalServerError).JSON(
+		dtos.GenericRestErrorResponse{
+			Description: "Internal Server Error",
+		})
 }
