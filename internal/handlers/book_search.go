@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/middlewares"
 	"github.com/bestreads/Backend/internal/repositories"
 	"github.com/bestreads/Backend/internal/services"
@@ -16,9 +17,10 @@ func BookSearch(c *fiber.Ctx) error {
 	query := c.Query("q")
 	if query == "" {
 		log.Warn().Msg("Book search called without query parameter")
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Query parameter 'q' is required",
-		})
+		return c.Status(fiber.StatusBadRequest).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: "Query parameter 'q' is required",
+			})
 	}
 
 	log.Info().Str("query", query).Msg("Searching for books")
@@ -27,9 +29,10 @@ func BookSearch(c *fiber.Ctx) error {
 	books, err := repositories.SearchBooks(db, ctx, query)
 	if err != nil {
 		log.Error().Err(err).Msg("Error searching in database")
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Error searching in database: " + err.Error(),
-		})
+		return c.Status(fiber.StatusInternalServerError).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: "Error searching in database",
+			})
 	}
 
 	// If no results, search in Open Library
@@ -38,13 +41,15 @@ func BookSearch(c *fiber.Ctx) error {
 		books, err = services.SearchOpenLibrary(httpClient, ctx, query)
 		if err != nil {
 			log.Error().Err(err).Msg("Error searching in Open Library")
-			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"error": "Error searching in Open Library: " + err.Error(),
-			})
+			return c.Status(fiber.StatusInternalServerError).
+				JSON(dtos.GenericRestErrorResponse{
+					Description: "Error searching in Open Library",
+				})
 		}
 	}
 
 	log.Info().Int("results", len(books)).Msg("Book search completed")
 
-	return c.Status(fiber.StatusOK).JSON(books)
+	return c.Status(fiber.StatusOK).
+		JSON(books)
 }
