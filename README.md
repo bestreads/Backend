@@ -72,7 +72,7 @@ returned nichts bis auf 200 wenn es funktioniert hat
 
 ### library
 
-**/user/<id>/lib**
+**/user/\<id\>/lib**
 
 GET:
 
@@ -119,7 +119,7 @@ curl -v -X POST "http://localhost:3000/api/v1/user/$id/lib" -H "Content-Type: ap
 returned ok wenn alles in ordnung war
 
 
-**/user/<id>/lib/<id>**
+**/user/\<id\>/lib/\<id\>**
 
 PUT:
 
