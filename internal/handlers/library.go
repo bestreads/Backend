@@ -21,12 +21,12 @@ func GetLibrary(c *fiber.Ctx) error {
 
 	limit := c.Query("limit")
 	if limit == "" {
-		limit = "0"
+		limit = "-1"
 	}
 
 	log.Info().Msg(fmt.Sprintf("GET library for user %d with limit %s", id, limit))
 
-	nlimit, err := strconv.ParseUint(limit, 10, 32)
+	nlimit, err := strconv.ParseInt(limit, 10, 32)
 	if err != nil {
 		log.Error().Err(err).Msg("error converting limit to int")
 		return c.Status(fiber.StatusInternalServerError).JSON(dtos.GenericRestErrorResponse{
