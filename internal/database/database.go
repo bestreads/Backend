@@ -47,7 +47,6 @@ func SetupDatabase(cfg *config.Config, ctx context.Context) (*gorm.DB, error) {
 		println("soft error mit den demodaten")
 	}
 
-
 	return db, nil
 }
 
@@ -68,7 +67,7 @@ func CreateBook(
 	return gorm.G[Book](db).Create(ctx, b)
 }
 
-func CreateUserBookRel(db *gorm.DB, ctx context.Context, uid uint, bid uint, s state) error {
+func CreateUserBookRel(db *gorm.DB, ctx context.Context, uid uint, bid uint, s ReadState) error {
 	return gorm.G[Library](db).Create(ctx, &Library{UserID: uid, BookID: bid, State: s})
 }
 
@@ -102,7 +101,7 @@ func insertDemoData(db *gorm.DB, ctx context.Context) error {
 	}
 
 	for i := range 2 {
-		if err := CreateUserBookRel(db, ctx, uint(i+1), uint(i+1), state(i)); err != nil {
+		if err := CreateUserBookRel(db, ctx, uint(i+1), uint(i+1), ReadState(i)); err != nil {
 			return err
 		}
 	}

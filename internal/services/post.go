@@ -1,16 +1,16 @@
 package services
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/repositories"
-	"github.com/gofiber/fiber/v2"
 )
 
-func GetPost(c *fiber.Ctx, uid uint, bid uint) ([]dtos.PostResponse, error) {
-	posts, err := repositories.GetDbPost(c.Context(), uid, bid)
+func GetPost(c context.Context, uid uint, bid uint) ([]dtos.PostResponse, error) {
+	posts, err := repositories.GetDbPost(c, uid, bid)
 	if err != nil {
 		return []dtos.PostResponse{}, err
 	}
@@ -44,7 +44,7 @@ func convert(p []database.Post) ([]dtos.PostResponse, error) {
 	return res, nil
 }
 
-func CreatePost(c *fiber.Ctx, id uint, bid uint, content string, b64i string) error {
+func CreatePost(c context.Context, id uint, bid uint, content string, b64i string) error {
 	// leeres bild wird einfach "0", das ist okay glaube ich
 	hash, err := database.FileStore(b64i, database.PostImage)
 	if err != nil {
@@ -58,6 +58,6 @@ func CreatePost(c *fiber.Ctx, id uint, bid uint, content string, b64i string) er
 		ImageHash: strconv.Itoa(hash),
 	}
 
-	return repositories.CreateDbPost(c.Context(), post)
+	return repositories.CreateDbPost(c, post)
 
 }

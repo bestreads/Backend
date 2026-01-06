@@ -27,7 +27,7 @@ func GetPost(c *fiber.Ctx) error {
 		})
 	}
 
-	posts, err := services.GetPost(c, pl.Uid, pl.Bid)
+	posts, err := services.GetPost(c.UserContext(), pl.Uid, pl.Bid)
 	if err != nil {
 		log.Error().Err(err).Msg("error getting posts")
 		return returnInternalError(c)
@@ -61,7 +61,7 @@ func CreatePost(c *fiber.Ctx) error {
 
 	}
 
-	if err = services.CreatePost(c, uint(id), pl.Bid, pl.Content, pl.B64Image); err != nil {
+	if err = services.CreatePost(c.UserContext(), uint(id), pl.Bid, pl.Content, pl.B64Image); err != nil {
 		log.Error().Err(err).Msg("error creating post")
 		return returnInternalError(c)
 	}
