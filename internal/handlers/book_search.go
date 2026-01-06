@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"strconv"
+
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/middlewares"
 	"github.com/bestreads/Backend/internal/repositories"
@@ -15,6 +17,16 @@ func BookSearch(c *fiber.Ctx) error {
 	httpClient := middlewares.HttpClient(ctx)
 
 	limit := c.Query("limit")
+	if limit != "" {
+		limitInt, err := strconv.Atoi(limit)
+		if err != nil || limitInt <= 0 {
+			log.Warn().Msg("Book search called with wrong limit")
+			return c.Status(fiber.StatusBadRequest).
+				JSON(dtos.GenericRestErrorResponse{
+					Description: "Query parameter 'limit' has to be a number > 0",
+				})
+		}
+	}
 	query := c.Query("q")
 	if query == "" {
 		log.Warn().Msg("Book search called without query parameter")
