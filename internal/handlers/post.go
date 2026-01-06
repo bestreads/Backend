@@ -61,7 +61,7 @@ func CreatePost(c *fiber.Ctx) error {
 
 	}
 
-	if err = services.CreatePost(c, uint(id), pl.Bid, pl.Content, pl.B64Image); err != nil {
+	if err = services.CreatePost(c.UserContext(), uint(id), pl.Bid, pl.Content, pl.B64Image); err != nil {
 		log.Error().Err(err).Msg("error creating post")
 		return returnInternalError(c)
 	}
