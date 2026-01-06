@@ -8,15 +8,20 @@ import (
 	"resty.dev/v3"
 )
 
-func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query string) ([]database.Book, error) {
+func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query string, limit string) ([]database.Book, error) {
 	var response dtos.OpenLibraryResponse
+
+	params := map[string]string{
+		"q": query,
+	}
+
+	if limit != "" {
+		params["limit"] = limit
+	}
 
 	_, err := httpClient.R().
 		SetContext(ctx).
-		SetQueryParams(map[string]string{
-			"q":     query,
-			"limit": "10",
-		}).
+		SetQueryParams(params).
 		SetResult(&response).
 		Get("https://openlibrary.org/search.json")
 
