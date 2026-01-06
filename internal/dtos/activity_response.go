@@ -1,7 +1,8 @@
 package dtos
 
-type ActivityType int
+import "github.com/bestreads/Backend/internal/database"
 
-type ActivityResponse[T any] struct {
-	Activity T
+type ActivityResponse struct {
+	Posts    []PostResponse
+	Activity []database.ReadState
 }
