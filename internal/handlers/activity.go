@@ -3,10 +3,9 @@ package handlers
 import (
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/middlewares"
+	"github.com/bestreads/Backend/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
-
-var CONTENT_LIMIT uint = 10
 
 func GetActivity(c *fiber.Ctx) error {
 	log := middlewares.Logger(c.UserContext())
@@ -22,4 +21,14 @@ func GetActivity(c *fiber.Ctx) error {
 			Description: "Json Invalid",
 		})
 	}
+
+	res, err := services.GetActivity(c.UserContext(), pl.Uids)
+	if err != nil {
+		log.Error().Err(err).Msg("internal error")
+		return c.Status(fiber.StatusInternalServerError).JSON(dtos.GenericRestErrorResponse{
+			Description: "internal server error",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(res)
 }

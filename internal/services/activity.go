@@ -9,9 +9,8 @@ import (
 
 const CONTENT_LIMIT uint = 10
 
-func GetActivity[T any](ctx context.Context, uids []uint) (dtos.ActivityResponse, error) {
+func GetActivity(ctx context.Context, uids []uint) (dtos.ActivityResponse, error) {
 	posts, err := repositories.GetPostActivity(ctx, uids, CONTENT_LIMIT)
-
 	if err != nil {
 		return dtos.ActivityResponse{}, err
 	}
