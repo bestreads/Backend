@@ -1,9 +1,10 @@
 package repositories
 
 import (
+	"context"
+
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/middlewares"
-	"github.com/valyala/fasthttp"
 	"gorm.io/gorm"
 )
 
@@ -20,6 +21,6 @@ func GetDbPost(ctx *fasthttp.RequestCtx, uid uint, bid uint) ([]database.Post, e
 		Find(ctx)
 }
 
-func CreateDbPost(ctx *fasthttp.RequestCtx, post database.Post) error {
+func CreateDbPost(ctx context.Context, post database.Post) error {
 	return gorm.G[database.Post](middlewares.DB(ctx)).Create(ctx, &post)
 }

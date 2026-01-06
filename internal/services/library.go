@@ -10,6 +10,10 @@ import (
 )
 
 func AddToLibrary(ctx context.Context, uid uint, bid uint, state database.ReadState) error {
+	if state < 0 || state > 2 {
+		return fmt.Errorf("test")
+	}
+
 	return repositories.AddBook(ctx, uid, bid, state)
 }
 

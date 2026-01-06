@@ -22,6 +22,7 @@ func GetLibrary(c *fiber.Ctx) error {
 	limit := c.Query("limit")
 	if limit == "" {
 		limit = "-1"
+
 	}
 
 	log.Info().Msg(fmt.Sprintf("GET library for user %d with limit %s", id, limit))
