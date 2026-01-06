@@ -27,7 +27,7 @@ func GetPost(c *fiber.Ctx) error {
 		})
 	}
 
-	posts, err := services.GetPost(c, pl.Uid, pl.Bid)
+	posts, err := services.GetPost(c.UserContext(), pl.Uid, pl.Bid)
 	if err != nil {
 		log.Error().Err(err).Msg("error getting posts")
 		return returnInternalError(c)

@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/bestreads/Backend/internal/database"
@@ -9,8 +10,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-func GetPost(c *fiber.Ctx, uid uint, bid uint) ([]dtos.PostResponse, error) {
-	posts, err := repositories.GetDbPost(c.Context(), uid, bid)
+func GetPost(c context.Context, uid uint, bid uint) ([]dtos.PostResponse, error) {
+	posts, err := repositories.GetDbPost(c, uid, bid)
 	if err != nil {
 		return []dtos.PostResponse{}, err
 	}
