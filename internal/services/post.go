@@ -15,7 +15,7 @@ func GetPost(c *fiber.Ctx, uid uint, bid uint) ([]dtos.PostResponse, error) {
 		return []dtos.PostResponse{}, err
 	}
 
-	return convert(posts)
+	return ConvertPost(posts)
 }
 
 // gerade wird das bild noch automatisch aus dem storage wieder zurückgeholt,
@@ -23,7 +23,7 @@ func GetPost(c *fiber.Ctx, uid uint, bid uint) ([]dtos.PostResponse, error) {
 //
 // man müsste das hier eig auch wegmachen und durch verschachtelte structs
 // (sachen mit FKs in der db) machen
-func convert(p []database.Post) ([]dtos.PostResponse, error) {
+func ConvertPost(p []database.Post) ([]dtos.PostResponse, error) {
 	res := make([]dtos.PostResponse, len(p))
 	for i, post := range p {
 		imageData, err := database.FileRetrieve(post.ImageHash, database.PostImage)
