@@ -10,25 +10,20 @@ import (
 
 func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query string, limit string) ([]database.Book, error) {
 	var response dtos.OpenLibraryResponse
-	var err error
-	if limit != "" {
-		_, err = httpClient.R().
-			SetContext(ctx).
-			SetQueryParams(map[string]string{
-				"q":     query,
-				"limit": limit,
-			}).
-			SetResult(&response).
-			Get("https://openlibrary.org/search.json")
-	} else {
-		_, err = httpClient.R().
-			SetContext(ctx).
-			SetQueryParams(map[string]string{
-				"q": query,
-			}).
-			SetResult(&response).
-			Get("https://openlibrary.org/search.json")
+
+	params := map[string]string{
+		"q": query,
 	}
+
+	if limit != "" {
+		params["limit"] = limit
+	}
+
+	_, err := httpClient.R().
+		SetContext(ctx).
+		SetQueryParams(params).
+		SetResult(&response).
+		Get("https://openlibrary.org/search.json")
 
 	if err != nil {
 		return nil, err
