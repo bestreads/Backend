@@ -64,13 +64,19 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 			CoverURL:    coverURL,
 		}
 
-		// Neues Buch in DB speichern mit ON CONFLICT DO NOTHING für idempotentes Verhalten
-		// Wenn ISBN bereits existiert, wird der Insert ignoriert (keine race condition)
-		if err := middlewares.DB(ctx).Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "isbn"}},
-			DoNothing: true,
-		}).Create(&book).Error; err != nil {
-			return fmt.Errorf("failed to save book to database: %w", err)
+		// Für Bücher mit ISBN: ON CONFLICT DO NOTHING für idempotentes Verhalten (keine race condition)
+		// Für Bücher ohne ISBN: normales Create (jedes Buch wird eingefügt)
+		if isbn != "" {
+			if err := middlewares.DB(ctx).Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "isbn"}},
+				DoNothing: true,
+			}).Create(&book).Error; err != nil {
+				return fmt.Errorf("failed to save book to database: %w", err)
+			}
+		} else {
+			if err := middlewares.DB(ctx).Create(&book).Error; err != nil {
+				return fmt.Errorf("failed to save book to database: %w", err)
+			}
 		}
 	}
 
