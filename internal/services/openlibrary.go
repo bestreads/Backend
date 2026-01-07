@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/dtos"
@@ -13,9 +14,12 @@ import (
 	"resty.dev/v3"
 )
 
-const openLibrarySearchURL = "https://openlibrary.org/search.json"
-const openLibraryBaseURL = "https://openlibrary.org"
+const openLibrarySearchURL = "https://openlibrary.org/search.json" // Open Library Search-Endpoint
+const openLibraryBaseURL = "https://openlibrary.org"               // Basis-URL für Work-Details und Beschreibungen
+const maxConcurrentRequests = 7                                    // Rate limiting: maximal 7 gleichzeitige Requests
 
+// SearchOpenLibrary führt eine OpenLibrary-Suche aus, lädt parallel zugehörige Work-Descriptions
+// und speichert die gefundenen Bücher inklusive Beschreibung und Cover-URL in der Datenbank.
 func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query string, limit string) error {
 	var response dtos.OpenLibraryResponse
 
@@ -37,9 +41,12 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 		return err
 	}
 
+	// Descriptions parallel fetchen mit Rate Limiting
+	descriptions := fetchAllDescriptions(httpClient, ctx, response.Docs)
+
 	// Transaction für alle Buch-Inserts
 	if err := middlewares.DB(ctx).Transaction(func(tx *gorm.DB) error {
-		for _, doc := range response.Docs {
+		for i, doc := range response.Docs {
 			isbn := ""
 			if len(doc.ISBN) > 0 {
 				isbn = doc.ISBN[0]
@@ -55,8 +62,7 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 				coverURL = fmt.Sprintf("https://covers.openlibrary.org/b/id/%d-M.jpg", doc.CoverID)
 			}
 
-			// Description von Works API holen
-			description := fetchWorkDetails(httpClient, ctx, doc.Key)
+			description := descriptions[i]
 			if description == "" {
 				description = "Es gibt keine Beschreibung für dieses Buch."
 			}
@@ -93,6 +99,30 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 	return nil
 }
 
+// fetchAllDescriptions holt alle Descriptions parallel mit Rate Limiting
+func fetchAllDescriptions(httpClient *resty.Client, ctx context.Context, docs []dtos.OpenLibraryBook) []string {
+	descriptions := make([]string, len(docs))
+
+	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, maxConcurrentRequests) // Rate limiting
+
+	for i, doc := range docs {
+		wg.Add(1)
+		go func(index int, workKey string) {
+			defer wg.Done()
+
+			semaphore <- struct{}{}        // Acquire
+			defer func() { <-semaphore }() // Release
+
+			descriptions[index] = fetchWorkDetails(httpClient, ctx, workKey)
+		}(i, doc.Key)
+	}
+
+	wg.Wait()
+	return descriptions
+}
+
+// fetchWorkDetails ruft die Work-JSON von Open Library ab und extrahiert die Description
 func fetchWorkDetails(httpClient *resty.Client, ctx context.Context, workKey string) string {
 	if workKey == "" {
 		return "Es gibt keine Beschreibung für dieses Buch."
@@ -114,6 +144,7 @@ func fetchWorkDetails(httpClient *resty.Client, ctx context.Context, workKey str
 	return extractDescription(workResponse.Description)
 }
 
+// extractDescription wandelt Description-Objekte oder Strings in einen lesbaren Text um
 func extractDescription(desc any) string {
 	if desc == nil {
 		return ""
