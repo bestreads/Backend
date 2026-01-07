@@ -27,18 +27,16 @@ func GetGlobalPosts(ctx context.Context, limit int) ([]dtos.PostResponse, error)
 	return convert(posts)
 }
 
-// gerade wird das bild noch automatisch aus dem storage wieder zurückgeholt,
-// in zukunft vllt durch eine "data" api oder so
-//
 // man müsste das hier eig auch wegmachen und durch verschachtelte structs
 // (sachen mit FKs in der db) machen
 func convert(p []database.Post) ([]dtos.PostResponse, error) {
 	res := make([]dtos.PostResponse, len(p))
 	for i, post := range p {
-		imageData, err := database.FileRetrieve(post.ImageHash, database.PostImage)
-		if err != nil {
-			return make([]dtos.PostResponse, 0), err
-		}
+		// das hier brauchen wir bald nicht mehr
+		// imageData, err := database.FileRetrieve(post.ImageHash, database.PostImage)
+		// if err != nil {
+		// 	return make([]dtos.PostResponse, 0), err
+		// }
 
 		res[i] = dtos.PostResponse{
 			Pfp:      post.User.Pfp,
@@ -46,7 +44,7 @@ func convert(p []database.Post) ([]dtos.PostResponse, error) {
 			Uid:      post.User.ID,
 			Book:     post.Book,
 			Content:  post.Content,
-			Image:    imageData,
+			ImageUrl: post.ImageUrl,
 		}
 	}
 
@@ -61,10 +59,10 @@ func CreatePost(c context.Context, id uint, bid uint, content string, b64i strin
 	}
 
 	post := database.Post{
-		UserID:    id,
-		BookID:    bid,
-		Content:   content,
-		ImageHash: strconv.Itoa(hash),
+		UserID:   id,
+		BookID:   bid,
+		Content:  content,
+		ImageUrl: strconv.Itoa(hash),
 	}
 
 	return repositories.CreateDbPost(c, post)

@@ -54,14 +54,18 @@ returned json objs mit den reviews
          "ReleaseDate":1
       },
       "Content":"awdawdawd",
-      "Image":"AAAAAAAAAAAAA"
+      "ImageUrl":"https://<base>/api/v1/<todo>"
    }
 ]
 ```
 
+wenn man es ohne body aufruft, kriegt man die neuesten posts im allgemeinen
+
 --- 
 
 POST:
+
+**DAS WIRD NOCH GEÄNDERT**
 
 ```bash
 id=1
