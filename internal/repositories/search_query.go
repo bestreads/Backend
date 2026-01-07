@@ -7,8 +7,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func SearchBooks(db *gorm.DB, ctx context.Context, query string) ([]database.Book, error) {
+func SearchBooks(db *gorm.DB, ctx context.Context, query string, limit int) ([]database.Book, error) {
 	var books []database.Book
-	err := db.WithContext(ctx).Where("LOWER(title) LIKE LOWER(?) OR LOWER(author) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?)", "%"+query+"%", "%"+query+"%", "%"+query+"%").Find(&books).Error
+	err := db.WithContext(ctx).
+		Where("LOWER(title) LIKE LOWER(?) OR LOWER(author) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?)", "%"+query+"%", "%"+query+"%", "%"+query+"%").
+		Limit(limit).
+		Find(&books).Error
 	return books, err
 }
