@@ -8,6 +8,7 @@ import (
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/middlewares"
+	"gorm.io/gorm"
 	"resty.dev/v3"
 )
 
@@ -32,7 +33,11 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 		Get(openLibrarySearchURL)
 
 	if err != nil {
-	if err := db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		return err
+	}
+
+	// Transaction für alle Buch-Inserts
+	if err := middlewares.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		for _, doc := range response.Docs {
 			isbn := ""
 			if len(doc.ISBN) > 0 {
