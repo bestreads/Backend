@@ -32,50 +32,55 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 		Get(openLibrarySearchURL)
 
 	if err != nil {
-		return err
-	}
+	if err := db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, doc := range response.Docs {
+			isbn := ""
+			if len(doc.ISBN) > 0 {
+				isbn = doc.ISBN[0]
+			}
 
-	for _, doc := range response.Docs {
-		isbn := ""
-		if len(doc.ISBN) > 0 {
-			isbn = doc.ISBN[0]
-		}
+			// Prüfen ob Buch mit dieser ISBN bereits existiert
+			if isbn != "" {
+				var existingBook database.Book
+				if err := tx.Where("isbn = ?", isbn).First(&existingBook).Error; err == nil {
+					// Buch existiert bereits, überspringen
+					continue
+				}
+			}
 
-		// Prüfen ob Buch mit dieser ISBN bereits existiert
-		if isbn != "" {
-			var existingBook database.Book
-			if err := middlewares.DB(ctx).Where("isbn = ?", isbn).First(&existingBook).Error; err == nil {
-				// Buch existiert bereits, überspringen
-				continue
+			author := ""
+			if len(doc.AuthorName) > 0 {
+				author = doc.AuthorName[0]
+			}
+
+			coverURL := ""
+			if doc.CoverID > 0 {
+				coverURL = fmt.Sprintf("https://covers.openlibrary.org/b/id/%d-M.jpg", doc.CoverID)
+			}
+
+			// Description von Works API holen
+			description := fetchWorkDetails(httpClient, ctx, doc.Key)
+			if description == "" {
+				description = "Es gibt keine Beschreibung für dieses Buch."
+			}
+
+			book := database.Book{
+				Title:       doc.Title,
+				Author:      author,
+				ISBN:        isbn,
+				ReleaseDate: uint64(doc.FirstYear),
+				Description: description,
+				CoverURL:    coverURL,
+			}
+
+			// Neues Buch in DB speichern
+			if err := tx.Create(&book).Error; err != nil {
+				return fmt.Errorf("failed to save book to database: %w", err)
 			}
 		}
-
-		author := ""
-		if len(doc.AuthorName) > 0 {
-			author = doc.AuthorName[0]
-		}
-
-		coverURL := ""
-		if doc.CoverID > 0 {
-			coverURL = fmt.Sprintf("https://covers.openlibrary.org/b/id/%d-M.jpg", doc.CoverID)
-		}
-
-		// Description von Works API holen
-		description := fetchWorkDetails(httpClient, ctx, doc.Key)
-
-		book := database.Book{
-			Title:       doc.Title,
-			Author:      author,
-			ISBN:        isbn,
-			ReleaseDate: uint64(doc.FirstYear),
-			Description: description,
-			CoverURL:    coverURL,
-		}
-
-		// Neues Buch in DB speichern
-		if err := middlewares.DB(ctx).Create(&book).Error; err != nil {
-			return fmt.Errorf("failed to save book to database: %w", err)
-		}
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	return nil
