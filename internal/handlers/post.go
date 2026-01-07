@@ -19,6 +19,32 @@ func GetPost(c *fiber.Ctx) error {
 		Bid uint `json:"bid"`
 	}{}
 
+	limit := c.Query("limit")
+	if limit == "" {
+		limit = "10"
+	}
+
+	nlimit, err := strconv.ParseInt(limit, 10, 32)
+	if err != nil {
+		log.Error().Err(err).Msg("error parsing int")
+		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
+			Description: "bad limit",
+		})
+
+	}
+
+	if len(c.Body()) == 0 {
+		// wir wollen posts von "allen" bekommen
+		posts, err := services.GetGlobalPosts(c.UserContext(), int(nlimit))
+		if err != nil {
+			log.Error().Err(err).Msg("error getting posts")
+			return returnInternalError(c)
+		}
+
+		return c.Status(fiber.StatusOK).JSON(posts)
+
+	}
+
 	// dieser parser ist eigentlich terror shit, man kann ein leeres obj ("{}") eingeben und kriegt struct {uid: 0, bid: 0} zurück xD
 	if err := c.BodyParser(&pl); err != nil {
 		log.Error().Err(err).Msg("JSON Parser Error!")
@@ -27,7 +53,7 @@ func GetPost(c *fiber.Ctx) error {
 		})
 	}
 
-	posts, err := services.GetPost(c.UserContext(), pl.Uid, pl.Bid)
+	posts, err := services.GetPost(c.UserContext(), pl.Uid, pl.Bid, int(nlimit))
 	if err != nil {
 		log.Error().Err(err).Msg("error getting posts")
 		return returnInternalError(c)
