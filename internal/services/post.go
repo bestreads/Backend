@@ -9,8 +9,17 @@ import (
 	"github.com/bestreads/Backend/internal/repositories"
 )
 
-func GetPost(c context.Context, uid uint, bid uint) ([]dtos.PostResponse, error) {
-	posts, err := repositories.GetDbPost(c, uid, bid)
+func GetPost(c context.Context, uid uint, bid uint, limit int) ([]dtos.PostResponse, error) {
+	posts, err := repositories.GetPost(c, uid, bid, limit)
+	if err != nil {
+		return []dtos.PostResponse{}, err
+	}
+
+	return convert(posts)
+}
+
+func GetGlobalPosts(ctx context.Context, limit int) ([]dtos.PostResponse, error) {
+	posts, err := repositories.GetGlobalPosts(ctx, limit)
 	if err != nil {
 		return []dtos.PostResponse{}, err
 	}

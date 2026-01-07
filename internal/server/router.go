@@ -13,6 +13,7 @@ func setRoutes(cfg *config.Config, app *fiber.App) {
 	v1.Get("/health", handlers.Health)
 	v1.Get("/books/search", handlers.BookSearch)
 
+	// ?limit=n
 	v1.Get("/post", handlers.GetPost)
 
 	v1.Post("/user", handlers.CreateUser)
