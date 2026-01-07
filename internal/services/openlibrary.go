@@ -8,6 +8,7 @@ import (
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/middlewares"
+	"gorm.io/gorm/clause"
 	"gorm.io/gorm"
 	"resty.dev/v3"
 )
@@ -44,19 +45,10 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 				isbn = doc.ISBN[0]
 			}
 
-			// Prüfen ob Buch mit dieser ISBN bereits existiert
-			if isbn != "" {
-				var existingBook database.Book
-				if err := tx.Where("isbn = ?", isbn).First(&existingBook).Error; err == nil {
-					// Buch existiert bereits, überspringen
-					continue
-				}
-			}
-
-			author := ""
-			if len(doc.AuthorName) > 0 {
-				author = doc.AuthorName[0]
-			}
+		author := ""
+		if len(doc.AuthorName) > 0 {
+			author = doc.AuthorName[0]
+		}
 
 			coverURL := ""
 			if doc.CoverID > 0 {
@@ -78,8 +70,17 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 				CoverURL:    coverURL,
 			}
 
-			// Neues Buch in DB speichern
-			if err := tx.Create(&book).Error; err != nil {
+		// Für Bücher mit ISBN: ON CONFLICT DO NOTHING für idempotentes Verhalten (keine race condition)
+		// Für Bücher ohne ISBN: normales Create (jedes Buch wird eingefügt)
+		if isbn != "" {
+			if err := middlewares.DB(ctx).Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "isbn"}},
+				DoNothing: true,
+			}).Create(&book).Error; err != nil {
+				return fmt.Errorf("failed to save book to database: %w", err)
+			}
+		} else {
+			if err := middlewares.DB(ctx).Create(&book).Error; err != nil {
 				return fmt.Errorf("failed to save book to database: %w", err)
 			}
 		}
