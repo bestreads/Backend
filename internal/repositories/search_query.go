@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/bestreads/Backend/internal/database"
-	"gorm.io/gorm"
+	"github.com/bestreads/Backend/internal/middlewares"
 )
 
-func SearchBooks(db *gorm.DB, ctx context.Context, query string, limit int) ([]database.Book, error) {
+func SearchBooks(ctx context.Context, query string, limit int) ([]database.Book, error) {
 	var books []database.Book
 
 	// Split query in einzelne Wörter
@@ -18,7 +18,7 @@ func SearchBooks(db *gorm.DB, ctx context.Context, query string, limit int) ([]d
 	}
 
 	// jedes Wort wird in title, author und description gesucht
-	dbQuery := db.WithContext(ctx)
+	dbQuery := middlewares.DB(ctx)
 
 	for i, word := range words {
 		pattern := "%" + strings.ToLower(word) + "%"

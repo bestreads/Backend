@@ -13,7 +13,6 @@ import (
 func BookSearch(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	log := middlewares.Logger(ctx)
-	db := middlewares.DB(ctx)
 	httpClient := middlewares.HttpClient(ctx)
 
 	limit := c.Query("limit")
@@ -45,7 +44,7 @@ func BookSearch(c *fiber.Ctx) error {
 	log.Info().Str("query", query).Str("limit", limit).Msg("Searching for books")
 
 	// Search in the database
-	books, err := repositories.SearchBooks(db, ctx, query, limitInt)
+	books, err := repositories.SearchBooks(ctx, query, limitInt)
 	if err != nil {
 		log.Error().Err(err).Msg("Error searching in database")
 		return c.Status(fiber.StatusInternalServerError).
@@ -57,7 +56,7 @@ func BookSearch(c *fiber.Ctx) error {
 	// If fewer results than limit, search in Open Library and then re-query DB
 	if len(books) < limitInt {
 		log.Info().Int("localResults", len(books)).Int("limit", limitInt).Msg("Not enough local results, searching Open Library API")
-		err := services.SearchOpenLibrary(httpClient, db, ctx, query, limit)
+		err := services.SearchOpenLibrary(httpClient, ctx, query, limit)
 		if err != nil {
 			log.Error().Err(err).Msg("Error searching in Open Library")
 			return c.Status(fiber.StatusInternalServerError).
@@ -67,7 +66,7 @@ func BookSearch(c *fiber.Ctx) error {
 		}
 
 		// Re-query DB to get all books including newly added ones
-		books, err = repositories.SearchBooks(db, ctx, query, limitInt)
+		books, err = repositories.SearchBooks(ctx, query, limitInt)
 		if err != nil {
 			log.Error().Err(err).Msg("Error searching in database after Open Library")
 			return c.Status(fiber.StatusInternalServerError).

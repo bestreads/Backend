@@ -7,14 +7,14 @@ import (
 
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/dtos"
-	"gorm.io/gorm"
+	"github.com/bestreads/Backend/internal/middlewares"
 	"resty.dev/v3"
 )
 
 const openLibrarySearchURL = "https://openlibrary.org/search.json"
 const openLibraryBaseURL = "https://openlibrary.org"
 
-func SearchOpenLibrary(httpClient *resty.Client, db *gorm.DB, ctx context.Context, query string, limit string) error {
+func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query string, limit string) error {
 	var response dtos.OpenLibraryResponse
 
 	newQuery := strings.ReplaceAll(query, " ", "+")
@@ -44,7 +44,7 @@ func SearchOpenLibrary(httpClient *resty.Client, db *gorm.DB, ctx context.Contex
 		// Prüfen ob Buch mit dieser ISBN bereits existiert
 		if isbn != "" {
 			var existingBook database.Book
-			if err := db.WithContext(ctx).Where("isbn = ?", isbn).First(&existingBook).Error; err == nil {
+			if err := middlewares.DB(ctx).Where("isbn = ?", isbn).First(&existingBook).Error; err == nil {
 				// Buch existiert bereits, überspringen
 				continue
 			}
@@ -62,9 +62,6 @@ func SearchOpenLibrary(httpClient *resty.Client, db *gorm.DB, ctx context.Contex
 
 		// Description von Works API holen
 		description := fetchWorkDetails(httpClient, ctx, doc.Key)
-		if description == "" {
-			description = "Es gibt keine Beschreibung für dieses Buch."
-		}
 
 		book := database.Book{
 			Title:       doc.Title,
@@ -76,7 +73,7 @@ func SearchOpenLibrary(httpClient *resty.Client, db *gorm.DB, ctx context.Contex
 		}
 
 		// Neues Buch in DB speichern
-		if err := db.WithContext(ctx).Create(&book).Error; err != nil {
+		if err := middlewares.DB(ctx).Create(&book).Error; err != nil {
 			return fmt.Errorf("failed to save book to database: %w", err)
 		}
 	}
@@ -86,7 +83,7 @@ func SearchOpenLibrary(httpClient *resty.Client, db *gorm.DB, ctx context.Contex
 
 func fetchWorkDetails(httpClient *resty.Client, ctx context.Context, workKey string) string {
 	if workKey == "" {
-		return ""
+		return "Es gibt keine Beschreibung für dieses Buch."
 	}
 
 	var workResponse dtos.OpenLibraryWorkResponse
