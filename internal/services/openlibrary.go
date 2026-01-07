@@ -9,6 +9,7 @@ import (
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/middlewares"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm"
 	"resty.dev/v3"
 )
 
@@ -36,33 +37,38 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 		return err
 	}
 
-	for _, doc := range response.Docs {
-		isbn := ""
-		if len(doc.ISBN) > 0 {
-			isbn = doc.ISBN[0]
-		}
+	// Transaction für alle Buch-Inserts
+	if err := middlewares.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, doc := range response.Docs {
+			isbn := ""
+			if len(doc.ISBN) > 0 {
+				isbn = doc.ISBN[0]
+			}
 
 		author := ""
 		if len(doc.AuthorName) > 0 {
 			author = doc.AuthorName[0]
 		}
 
-		coverURL := ""
-		if doc.CoverID > 0 {
-			coverURL = fmt.Sprintf("https://covers.openlibrary.org/b/id/%d-M.jpg", doc.CoverID)
-		}
+			coverURL := ""
+			if doc.CoverID > 0 {
+				coverURL = fmt.Sprintf("https://covers.openlibrary.org/b/id/%d-M.jpg", doc.CoverID)
+			}
 
-		// Description von Works API holen
-		description := fetchWorkDetails(httpClient, ctx, doc.Key)
+			// Description von Works API holen
+			description := fetchWorkDetails(httpClient, ctx, doc.Key)
+			if description == "" {
+				description = "Es gibt keine Beschreibung für dieses Buch."
+			}
 
-		book := database.Book{
-			Title:       doc.Title,
-			Author:      author,
-			ISBN:        isbn,
-			ReleaseDate: uint64(doc.FirstYear),
-			Description: description,
-			CoverURL:    coverURL,
-		}
+			book := database.Book{
+				Title:       doc.Title,
+				Author:      author,
+				ISBN:        isbn,
+				ReleaseDate: uint64(doc.FirstYear),
+				Description: description,
+				CoverURL:    coverURL,
+			}
 
 		// Für Bücher mit ISBN: ON CONFLICT DO NOTHING für idempotentes Verhalten (keine race condition)
 		// Für Bücher ohne ISBN: normales Create (jedes Buch wird eingefügt)
@@ -78,6 +84,9 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 				return fmt.Errorf("failed to save book to database: %w", err)
 			}
 		}
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	return nil
