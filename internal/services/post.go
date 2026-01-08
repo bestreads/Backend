@@ -53,7 +53,7 @@ func convert(p []database.Post) ([]dtos.PostResponse, error) {
 
 func CreatePost(c context.Context, id uint, bid uint, content string, b64i string) error {
 	// leeres bild wird einfach "0", das ist okay glaube ich
-	hash, err := database.FileStoreB64(b64i, database.PostImage)
+	hash, err := database.FileStoreB64(b64i)
 	if err != nil {
 		return err
 	}

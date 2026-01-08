@@ -2,6 +2,6 @@ package services
 
 import "github.com/bestreads/Backend/internal/database"
 
-func SaveFile(data []byte, itype database.ImageType) (int, error) {
-	return database.FileStoreRaw(data, itype)
+func SaveFile(data []byte) (int, error) {
+	return database.FileStoreRaw(data)
 }

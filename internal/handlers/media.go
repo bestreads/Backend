@@ -18,40 +18,46 @@ func SaveFile(c *fiber.Ctx) error {
 
 	log := middlewares.Logger(c.UserContext())
 
-	itype := c.Query("type")
-	if itype == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
-			Description: "no image type",
-		})
-	}
-
-	nitype, err := strconv.ParseInt(itype, 10, 32)
-	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
-			Description: "bad type",
-		})
-	}
-
 	if len(c.Body()) < 1 {
 		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
 			Description: "no data",
 		})
 	}
 
-	// ...warum
-	t, exists := database.ImageTypeMap[int(nitype)]
-	if !exists {
-		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
-			Description: "bad image type",
+	hash, err := services.SaveFile(c.Body())
+	if err != nil {
+		log.Error().Err(err).Msg("file store error")
+		return c.Status(fiber.StatusInternalServerError).JSON(dtos.GenericRestErrorResponse{
+			Description: "it exploded",
 		})
-
 	}
 
-	hash, err := services.SaveFile(c.Body(), t)
-	log.Info().Msg(fmt.Sprintf("using type %d and path %d", t, hash))
+	log.Info().Msg(fmt.Sprintf("using path %d", hash))
 
 	url := fmt.Sprintf("%s/api/v1/media/%d", middlewares.Config(c.UserContext()).ApiBaseURL, hash)
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"url": url,
 	})
+}
+
+func GetFile(c *fiber.Ctx) error {
+	log := middlewares.Logger(c.UserContext())
+
+	key, err := strconv.ParseUint(c.Params("KEY"), 10, 32)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
+			Description: "bad key format",
+		})
+	}
+
+	// 400iq path sanitizing: doppeltes casting sichert den pfad bestimmt :3
+	data, err := database.FileRetrieve(strconv.Itoa(int(key)))
+	if err != nil {
+		log.Error().Err(err).Msg("file retrieve error")
+		return c.Status(fiber.StatusInternalServerError).JSON(dtos.GenericRestErrorResponse{
+			Description: "it did not wor :(",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).Send(data)
 }
