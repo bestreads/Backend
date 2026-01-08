@@ -16,7 +16,7 @@ import (
 
 const openLibrarySearchURL = "https://openlibrary.org/search.json" // Open Library Search-Endpoint
 const openLibraryBaseURL = "https://openlibrary.org"               // Basis-URL für Work-Details und Beschreibungen
-const maxConcurrentRequests = 7                                    // Rate limiting: maximal 7 gleichzeitige Requests
+const maxConcurrentRequests = 15                                   // Rate limiting: maximal 15 gleichzeitige Requests
 
 // SearchOpenLibrary führt eine OpenLibrary-Suche aus, lädt parallel zugehörige Work-Descriptions
 // und speichert die gefundenen Bücher inklusive Beschreibung und Cover-URL in der Datenbank.
@@ -41,13 +41,16 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 		return err
 	}
 
-	// Descriptions parallel fetchen mit Rate Limiting
+	// Descriptions und Cover-URLs parallel fetchen mit Rate Limiting
 	descriptions := fetchAllDescriptions(httpClient, ctx, response.Docs)
+	coverURLs := fetchAllCoverURLs(ctx, response.Docs)
 
 	// Transaction für alle Buch-Inserts
 	if err := middlewares.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		for i, doc := range response.Docs {
-			go parInsertBooks(tx, ctx, doc, descriptions[i])
+			if err := insertBook(tx, ctx, doc, descriptions[i], coverURLs[i]); err != nil {
+				return err
+			}
 		}
 		return nil
 	}); err != nil {
@@ -57,7 +60,41 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 	return nil
 }
 
-func parInsertBooks(tx *gorm.DB, ctx context.Context, doc dtos.OpenLibraryBook, description string) error {
+// fetchAllCoverURLs holt alle Cover-Bilder parallel und cached sie
+func fetchAllCoverURLs(ctx context.Context, docs []dtos.OpenLibraryBook) []string {
+	coverURLs := make([]string, len(docs))
+
+	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, maxConcurrentRequests) // Rate limiting
+
+	for i, doc := range docs {
+		wg.Add(1)
+		go func(index int, coverID int) {
+			defer wg.Done()
+
+			if coverID <= 0 {
+				coverURLs[index] = ""
+				return
+			}
+
+			semaphore <- struct{}{}        // Acquire
+			defer func() { <-semaphore }() // Release
+
+			hash, err := database.CacheMedia(fmt.Sprintf("https://covers.openlibrary.org/b/id/%d-M.jpg", coverID))
+			if err != nil {
+				coverURLs[index] = ""
+				return
+			}
+			coverURLs[index] = fmt.Sprintf("%s/api/v1/media/%d", middlewares.Config(ctx).ApiBaseURL, hash)
+		}(i, doc.CoverID)
+	}
+
+	wg.Wait()
+	return coverURLs
+}
+
+// insertBook fügt ein Buch in die Datenbank ein
+func insertBook(tx *gorm.DB, ctx context.Context, doc dtos.OpenLibraryBook, description string, cachedURL string) error {
 	isbn := ""
 	if len(doc.ISBN) > 0 {
 		isbn = doc.ISBN[0]
@@ -66,16 +103,6 @@ func parInsertBooks(tx *gorm.DB, ctx context.Context, doc dtos.OpenLibraryBook, 
 	author := ""
 	if len(doc.AuthorName) > 0 {
 		author = doc.AuthorName[0]
-	}
-
-	cachedURL := ""
-	if doc.CoverID > 0 {
-		hash, err := database.CacheMedia(fmt.Sprintf("https://covers.openlibrary.org/b/id/%d-M.jpg", doc.CoverID))
-		if err != nil {
-			return err
-		}
-		cachedURL = fmt.Sprintf("%s/api/v1/media/%d", middlewares.Config(ctx).ApiBaseURL, hash)
-
 	}
 
 	if description == "" {
@@ -91,7 +118,7 @@ func parInsertBooks(tx *gorm.DB, ctx context.Context, doc dtos.OpenLibraryBook, 
 		CoverURL:    cachedURL,
 	}
 
-	// Für Bücher mit ISBN: ON CONFLICT DO NOTHING für idempotentes Verhalten (keine race condition)
+	// Für Bücher mit ISBN: ON CONFLICT DO NOTHING für idempotentes Verhalten
 	// Für Bücher ohne ISBN: normales Create (jedes Buch wird eingefügt)
 	if isbn != "" {
 		if err := repositories.CreateBookNoISBN(tx, ctx, &book); err != nil {
@@ -104,7 +131,6 @@ func parInsertBooks(tx *gorm.DB, ctx context.Context, doc dtos.OpenLibraryBook, 
 	}
 
 	return nil
-
 }
 
 // fetchAllDescriptions holt alle Descriptions parallel mit Rate Limiting
