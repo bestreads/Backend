@@ -9,6 +9,7 @@ import (
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/middlewares"
+	"github.com/bestreads/Backend/internal/repositories"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 	"resty.dev/v3"
@@ -47,56 +48,7 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 	// Transaction für alle Buch-Inserts
 	if err := middlewares.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		for i, doc := range response.Docs {
-			isbn := ""
-			if len(doc.ISBN) > 0 {
-				isbn = doc.ISBN[0]
-			}
-
-			author := ""
-			if len(doc.AuthorName) > 0 {
-				author = doc.AuthorName[0]
-			}
-
-			coverURL := ""
-			if doc.CoverID > 0 {
-				coverURL = fmt.Sprintf("https://covers.openlibrary.org/b/id/%d-M.jpg", doc.CoverID)
-			}
-
-			hash, err := database.CacheMedia(coverURL)
-			if err != nil {
-				return err
-			}
-
-			chachedURL := fmt.Sprintf("%s/api/v1/media/%d", middlewares.Config(ctx).ApiBaseURL, hash)
-
-			description := descriptions[i]
-			if description == "" {
-				description = "Es gibt keine Beschreibung für dieses Buch."
-			}
-
-			book := database.Book{
-				Title:       doc.Title,
-				Author:      author,
-				ISBN:        isbn,
-				ReleaseDate: uint64(doc.FirstYear),
-				Description: description,
-				CoverURL:    chachedURL,
-			}
-
-			// Für Bücher mit ISBN: ON CONFLICT DO NOTHING für idempotentes Verhalten (keine race condition)
-			// Für Bücher ohne ISBN: normales Create (jedes Buch wird eingefügt)
-			if isbn != "" {
-				if err := tx.Clauses(clause.OnConflict{
-					Columns:   []clause.Column{{Name: "isbn"}},
-					DoNothing: true,
-				}).Create(&book).Error; err != nil {
-					return fmt.Errorf("failed to save book to database: %w", err)
-				}
-			} else {
-				if err := tx.Create(&book).Error; err != nil {
-					return fmt.Errorf("failed to save book to database: %w", err)
-				}
-			}
+			go parInsertBooks(tx, ctx, doc, descriptions[i])
 		}
 		return nil
 	}); err != nil {
@@ -104,6 +56,56 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 	}
 
 	return nil
+}
+
+func parInsertBooks(tx *gorm.DB, ctx context.Context, doc dtos.OpenLibraryBook, description string) error {
+	isbn := ""
+	if len(doc.ISBN) > 0 {
+		isbn = doc.ISBN[0]
+	}
+
+	author := ""
+	if len(doc.AuthorName) > 0 {
+		author = doc.AuthorName[0]
+	}
+
+	cachedURL := ""
+	if doc.CoverID > 0 {
+		hash, err := database.CacheMedia(fmt.Sprintf("https://covers.openlibrary.org/b/id/%d-M.jpg", doc.CoverID))
+		if err != nil {
+			return err
+		}
+		cachedURL = fmt.Sprintf("%s/api/v1/media/%d", middlewares.Config(ctx).ApiBaseURL, hash)
+
+	}
+
+	if description == "" {
+		description = "Es gibt keine Beschreibung für dieses Buch."
+	}
+
+	book := database.Book{
+		Title:       doc.Title,
+		Author:      author,
+		ISBN:        isbn,
+		ReleaseDate: uint64(doc.FirstYear),
+		Description: description,
+		CoverURL:    cachedURL,
+	}
+
+	// Für Bücher mit ISBN: ON CONFLICT DO NOTHING für idempotentes Verhalten (keine race condition)
+	// Für Bücher ohne ISBN: normales Create (jedes Buch wird eingefügt)
+	if isbn != "" {
+		if err := repositories.CreateBookNoISBN(ctx, &book); err != nil {
+			return fmt.Errorf("failed to save book to database: %w", err)
+		}
+	} else {
+		if err := repositories.CreateBookISBN(ctx, &book); err != nil {
+			return fmt.Errorf("failed to save book to database: %w", err)
+		}
+	}
+
+	return nil
+
 }
 
 // fetchAllDescriptions holt alle Descriptions parallel mit Rate Limiting
