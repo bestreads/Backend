@@ -26,7 +26,7 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 	newQuery := strings.ReplaceAll(query, " ", "+")
 
 	params := map[string]string{
-		"q":      newQuery,
+		"q":      "title_suggest:\"" + newQuery + "\" author:\"" + newQuery + "\"",
 		"limit":  limit,
 		"fields": "isbn,title,author_name,cover_i,first_publish_year,key",
 	}
