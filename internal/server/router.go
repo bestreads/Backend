@@ -10,6 +10,8 @@ func setRoutes(cfg *config.Config, app *fiber.App) {
 	basePath := app.Group(cfg.ApiBasePath)
 	v1 := basePath.Group("/v1")
 
+	// v1.Get("/media/")
+
 	v1.Get("/health", handlers.Health)
 	v1.Get("/books/search", handlers.BookSearch)
 
@@ -17,6 +19,8 @@ func setRoutes(cfg *config.Config, app *fiber.App) {
 	v1.Get("/post", handlers.GetPost)
 
 	v1.Post("/user", handlers.CreateUser)
+
+	v1.Put("/media/", handlers.SaveFile)
 
 	v1user := v1.Group("/user/:ID") // vllt hier so eine auth middleware
 	v1user.Post("/post", handlers.CreatePost)
