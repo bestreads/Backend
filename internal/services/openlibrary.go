@@ -94,11 +94,11 @@ func parInsertBooks(tx *gorm.DB, ctx context.Context, doc dtos.OpenLibraryBook, 
 	// Für Bücher mit ISBN: ON CONFLICT DO NOTHING für idempotentes Verhalten (keine race condition)
 	// Für Bücher ohne ISBN: normales Create (jedes Buch wird eingefügt)
 	if isbn != "" {
-		if err := repositories.CreateBookNoISBN(ctx, &book); err != nil {
+		if err := repositories.CreateBookNoISBN(tx, ctx, &book); err != nil {
 			return fmt.Errorf("failed to save book to database: %w", err)
 		}
 	} else {
-		if err := repositories.CreateBookISBN(ctx, &book); err != nil {
+		if err := repositories.CreateBookISBN(tx, ctx, &book); err != nil {
 			return fmt.Errorf("failed to save book to database: %w", err)
 		}
 	}

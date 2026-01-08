@@ -37,8 +37,8 @@ func SearchBooks(ctx context.Context, query string, limit int) ([]database.Book,
 	return books, err
 }
 
-func CreateBookNoISBN(ctx context.Context, b *database.Book) error {
-	return gorm.G[database.Book](middlewares.DB(ctx).
+func CreateBookNoISBN(tx *gorm.DB, ctx context.Context, b *database.Book) error {
+	return gorm.G[database.Book](tx.
 		Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "isbn"}},
 			DoNothing: true,
@@ -46,7 +46,7 @@ func CreateBookNoISBN(ctx context.Context, b *database.Book) error {
 		Create(ctx, b)
 }
 
-func CreateBookISBN(ctx context.Context, b *database.Book) error {
-	return gorm.G[database.Book](middlewares.DB(ctx)).
+func CreateBookISBN(tx *gorm.DB, ctx context.Context, b *database.Book) error {
+	return gorm.G[database.Book](tx).
 		Create(ctx, b)
 }
