@@ -34,3 +34,5 @@ config.yaml
 
 Backend
 store/
+
+*.DS_Store

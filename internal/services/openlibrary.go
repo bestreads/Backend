@@ -62,6 +62,13 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 				coverURL = fmt.Sprintf("https://covers.openlibrary.org/b/id/%d-M.jpg", doc.CoverID)
 			}
 
+			hash, err := database.CacheMedia(coverURL)
+			if err != nil {
+				return err
+			}
+
+			chachedURL := fmt.Sprintf("%s/api/v1/media/%d", middlewares.Config(ctx).ApiBaseURL, hash)
+
 			description := descriptions[i]
 			if description == "" {
 				description = "Es gibt keine Beschreibung für dieses Buch."
@@ -73,7 +80,7 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 				ISBN:        isbn,
 				ReleaseDate: uint64(doc.FirstYear),
 				Description: description,
-				CoverURL:    coverURL,
+				CoverURL:    chachedURL,
 			}
 
 			// Für Bücher mit ISBN: ON CONFLICT DO NOTHING für idempotentes Verhalten (keine race condition)
