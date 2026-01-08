@@ -3,6 +3,8 @@ package database
 import (
 	"fmt"
 	"hash/fnv"
+	"io"
+	"net/http"
 	"os"
 	"strconv"
 )
@@ -67,4 +69,24 @@ func FileRetrieveB64(hash string) (string, error) {
 func prefix(name string) string {
 	// eigentlich müsssen wir hier noch den pfad sanitizen
 	return fmt.Sprintf("./store/%s", name)
+}
+
+func CacheMedia(url string) (int, error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return -1, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return -1, err
+	}
+
+	hash, err := FileStoreRaw(body)
+	if err != nil {
+		return -1, err
+	}
+
+	return hash, nil
 }
