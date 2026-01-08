@@ -54,7 +54,7 @@ returned json objs mit den reviews
          "ReleaseDate":1
       },
       "Content":"awdawdawd",
-      "ImageUrl":"https://<base>/api/v1/<todo>"
+      "ImageUrl":"https://<base>/api/v1/media/<ID>"
    }
 ]
 ```
@@ -65,11 +65,9 @@ wenn man es ohne body aufruft, kriegt man die neuesten posts im allgemeinen
 
 POST:
 
-**DAS WIRD NOCH GEÄNDERT**
-
 ```bash
 id=1
-curl -v -X POST "http://localhost:3000/api/v1/user/$id/post" -H "Content-Type: application/json" -d "{\"bid\": 1,\"content\": \"awdawdawd\",\"b64image\":\"AAAAAAAAAAAAA\"}"
+curl -v -X POST "http://localhost:3000/api/v1/user/$id/post" -H "Content-Type: application/json" -d "{\"bid\": 1,\"content\": \"awdawdawd\",\"imageurl\":\"http://url/api/v1/media/1\"}"
 ```
 returned nichts bis auf 200 wenn es funktioniert hat
 

@@ -76,7 +76,7 @@ func CreatePost(c *fiber.Ctx) error {
 	pl := struct {
 		Bid      uint   `json:"bid"`
 		Content  string `json:"content"`
-		B64Image string `json:"b64image"`
+		ImageURL string `json:"imageurl"`
 	}{}
 
 	if err := c.BodyParser(&pl); err != nil {
@@ -87,7 +87,7 @@ func CreatePost(c *fiber.Ctx) error {
 
 	}
 
-	if err = services.CreatePost(c.UserContext(), uint(id), pl.Bid, pl.Content, pl.B64Image); err != nil {
+	if err = services.CreatePost(c.UserContext(), uint(id), pl.Bid, pl.Content, pl.ImageURL); err != nil {
 		log.Error().Err(err).Msg("error creating post")
 		return returnInternalError(c)
 	}

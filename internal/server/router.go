@@ -19,6 +19,11 @@ func setRoutes(cfg *config.Config, app *fiber.App) {
 
 	v1.Post("/user", handlers.CreateUser)
 
+	// ?type=0|1|2
+	v1.Put("/media", handlers.SaveFile)
+	// ?type=0|1|2
+	v1.Get("/media/:KEY", handlers.GetFile)
+
 	v1user := v1.Group("/user/:ID") // vllt hier so eine auth middleware
 	v1user.Post("/post", handlers.CreatePost)
 
