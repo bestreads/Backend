@@ -9,20 +9,7 @@ import (
 	"strconv"
 )
 
-// sachen, um bilder zu verwalten
-
-// type ImageType int
-
-// const (
-// 	PostImage ImageType = iota
-// 	ProfileImage
-// )
-
-// var ImageTypeMap = map[int]ImageType{
-// 	0: PostImage,
-// 	1: ProfileImage,
-// }
-
+// speichert die gegebene daten im filestore. gibt den hash (schlüssel) wieder zurück
 func FileStoreRaw(data []byte) (int, error) {
 	val, err := fnv.New128a().Write(data)
 	if err != nil {
@@ -38,6 +25,7 @@ func FileStoreRaw(data []byte) (int, error) {
 
 }
 
+// Deprecated: mach mal nicht
 func FileStoreB64(data string) (int, error) {
 	// schneller pfad, kein fs-aufruf
 	if data == "" {
@@ -48,10 +36,12 @@ func FileStoreB64(data string) (int, error) {
 	return FileStoreRaw(bytes)
 }
 
+// sucht nach dem hash (schlüssel) und gibt die datei wieder zurück.
 func FileRetrieve(hash string) ([]byte, error) {
 	return os.ReadFile(prefix(hash))
 }
 
+// Deprecated: mach mal nicht
 func FileRetrieveB64(hash string) (string, error) {
 	// auch schneller pfad
 	if hash == "0" {
@@ -71,6 +61,7 @@ func prefix(name string) string {
 	return fmt.Sprintf("./store/%s", name)
 }
 
+// cached den link im dateisystem. gibt den hash (schlüssel) wieder zurück
 func CacheMedia(url string) (int, error) {
 	resp, err := http.Get(url)
 	if err != nil {
