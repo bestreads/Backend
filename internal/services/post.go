@@ -2,8 +2,6 @@ package services
 
 import (
 	"context"
-	"strconv"
-
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/repositories"
@@ -32,12 +30,6 @@ func GetGlobalPosts(ctx context.Context, limit int) ([]dtos.PostResponse, error)
 func convert(p []database.Post) ([]dtos.PostResponse, error) {
 	res := make([]dtos.PostResponse, len(p))
 	for i, post := range p {
-		// das hier brauchen wir bald nicht mehr
-		// imageData, err := database.FileRetrieve(post.ImageHash, database.PostImage)
-		// if err != nil {
-		// 	return make([]dtos.PostResponse, 0), err
-		// }
-
 		res[i] = dtos.PostResponse{
 			Pfp:      post.User.Pfp,
 			Username: post.User.Username,
@@ -51,18 +43,13 @@ func convert(p []database.Post) ([]dtos.PostResponse, error) {
 	return res, nil
 }
 
-func CreatePost(c context.Context, id uint, bid uint, content string, b64i string) error {
+func CreatePost(c context.Context, id uint, bid uint, content string, imageurl string) error {
 	// leeres bild wird einfach "0", das ist okay glaube ich
-	hash, err := database.FileStoreB64(b64i)
-	if err != nil {
-		return err
-	}
-
 	post := database.Post{
 		UserID:   id,
 		BookID:   bid,
 		Content:  content,
-		ImageUrl: strconv.Itoa(hash),
+		ImageUrl: imageurl,
 	}
 
 	return repositories.CreateDbPost(c, post)
