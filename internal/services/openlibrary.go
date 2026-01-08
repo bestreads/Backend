@@ -9,8 +9,8 @@ import (
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/middlewares"
-	"github.com/bestreads/Backend/internal/repositories"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	"resty.dev/v3"
 )
 
@@ -21,6 +21,7 @@ const maxConcurrentRequests = 15                                   // Rate limit
 // SearchOpenLibrary führt eine OpenLibrary-Suche aus, lädt parallel zugehörige Work-Descriptions
 // und speichert die gefundenen Bücher inklusive Beschreibung und Cover-URL in der Datenbank.
 func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query string, limit string) error {
+	// log := middlewares.Logger(ctx)
 	var response dtos.OpenLibraryResponse
 
 	newQuery := strings.ReplaceAll(query, " ", "+")
@@ -48,6 +49,9 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 	// Transaction für alle Buch-Inserts
 	if err := middlewares.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		for i, doc := range response.Docs {
+			fmt.Println(doc.ISBN)
+			fmt.Println()
+
 			if err := insertBook(tx, ctx, doc, descriptions[i], coverURLs[i]); err != nil {
 				return err
 			}
@@ -97,8 +101,10 @@ func fetchAllCoverURLs(ctx context.Context, docs []dtos.OpenLibraryBook) []strin
 func insertBook(tx *gorm.DB, ctx context.Context, doc dtos.OpenLibraryBook, description string, cachedURL string) error {
 	isbn := ""
 	if len(doc.ISBN) > 0 {
-		isbn = doc.ISBN[0]
+		isbn = doc.ISBN
 	}
+
+	println(isbn)
 
 	author := ""
 	if len(doc.AuthorName) > 0 {
@@ -120,12 +126,23 @@ func insertBook(tx *gorm.DB, ctx context.Context, doc dtos.OpenLibraryBook, desc
 
 	// Für Bücher mit ISBN: ON CONFLICT DO NOTHING für idempotentes Verhalten
 	// Für Bücher ohne ISBN: normales Create (jedes Buch wird eingefügt)
+	// ich weiß nicht, wieso man die db sachen nicht per funktionsaufruf machen kann,
+	// aber es ist so.
 	if isbn != "" {
-		if err := repositories.CreateBookNoISBN(tx, ctx, &book); err != nil {
+		err := gorm.G[database.Book](tx.
+			Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "isbn"}},
+				DoNothing: true,
+			})).
+			Create(ctx, &book)
+		if err != nil {
 			return fmt.Errorf("failed to save book to database: %w", err)
 		}
 	} else {
-		if err := repositories.CreateBookISBN(tx, ctx, &book); err != nil {
+		println("check failed 2")
+		err := gorm.G[database.Book](tx).
+			Create(ctx, &book)
+		if err != nil {
 			return fmt.Errorf("failed to save book to database: %w", err)
 		}
 	}
