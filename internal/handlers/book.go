@@ -15,7 +15,7 @@ func GetBook(c *fiber.Ctx) error {
 
 	var book database.Book
 
-	bid, err := strconv.ParseUint(c.Params("BID"), 10, 64)
+	bid, err := strconv.ParseUint(c.Params("BID"), 10, 32)
 	if err != nil {
 		log.Error().Err(err).Msg("parsing bookid error")
 		return c.Status(fiber.StatusBadRequest).
