@@ -72,7 +72,7 @@ func GetUserProfile(c *fiber.Ctx) error {
 
 	// return userProfile
 	return c.JSON(dtos.ProfileResponse{
-		UserId:               uid,
+		UserID:               uid,
 		Username:             user.Username,
 		ProfilePicture:       user.Pfp,
 		AccountCreatedAtYear: uint(user.CreatedAt.Year()),
