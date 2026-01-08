@@ -1,7 +1,7 @@
 package dtos
 
 type ProfileResponse struct {
-	UserId               uint64 `json:"userId"`
+	UserID               uint64 `json:"userId"`
 	Username             string `json:"username"`
 	ProfilePicture       string `json:"profilePicture"`
 	AccountCreatedAtYear uint   `json:"accountCreatedAtYear"`
