@@ -12,7 +12,7 @@ func setRoutes(cfg *config.Config, app *fiber.App) {
 
 	v1.Get("/health", handlers.Health)
 	v1.Get("/books/search", handlers.BookSearch)
-	v1.Get("/books/:BID", handlers.GetBook)
+	v1.Get("/books/:bid", handlers.GetBook)
 
 	// ?limit=n
 	v1.Get("/post", handlers.GetPost)
