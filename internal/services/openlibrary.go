@@ -11,7 +11,6 @@ import (
 	"github.com/bestreads/Backend/internal/middlewares"
 	"github.com/bestreads/Backend/internal/repositories"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 	"resty.dev/v3"
 )
 
