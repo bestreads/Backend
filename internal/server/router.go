@@ -18,6 +18,7 @@ func setRoutes(cfg *config.Config, app *fiber.App) {
 	v1.Get("/post", handlers.GetPost)
 
 	v1.Post("/user", handlers.CreateUser)
+	v1.Get("/user/profile/:id", handlers.GetUserProfile)
 
 	// ?type=0|1|2
 	v1.Put("/media", handlers.SaveFile)
