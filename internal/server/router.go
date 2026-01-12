@@ -10,6 +10,10 @@ func setRoutes(cfg *config.Config, app *fiber.App) {
 	basePath := app.Group(cfg.ApiBasePath)
 	v1 := basePath.Group("/v1")
 
+	auth := v1.Group("/auth")
+	auth.Post("/login", handlers.Login)
+	auth.Post("/refresh", handlers.TokenRefresh)
+
 	v1.Get("/health", handlers.Health)
 	v1.Get("/books/search", handlers.BookSearch)
 	v1.Get("/books/:bid", handlers.GetBook)
@@ -19,10 +23,6 @@ func setRoutes(cfg *config.Config, app *fiber.App) {
 
 	v1.Post("/user", handlers.CreateUser)
 	v1.Get("/user/profile/:id", handlers.GetUserProfile)
-
-	auth := v1.Group("/auth")
-	auth.Post("/login", handlers.Login)
-	auth.Post("/refresh", handlers.TokenRefresh)
 
 	// ?type=0|1|2
 	v1.Put("/media", handlers.SaveFile)

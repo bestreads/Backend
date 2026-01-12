@@ -14,7 +14,7 @@ func TokenRefresh(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	log := middlewares.Logger(ctx)
 
-	// ToDo: get userId from refresh jwt
+	// ToDo: Get userId from refresh jwt through auth validation middleware
 	userId := 0
 
 	// Create access JWT
