@@ -22,6 +22,7 @@ func setRoutes(cfg *config.Config, app *fiber.App) {
 
 	auth := v1.Group("/auth")
 	auth.Post("/login", handlers.Login)
+	auth.Post("/refresh", handlers.TokenRefresh)
 
 	// ?type=0|1|2
 	v1.Put("/media", handlers.SaveFile)
