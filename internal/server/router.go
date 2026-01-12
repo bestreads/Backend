@@ -17,9 +17,11 @@ func setRoutes(cfg *config.Config, app *fiber.App) {
 	// ?limit=n
 	v1.Get("/post", handlers.GetPost)
 
-	v1.Post("/login", handlers.Login)
 	v1.Post("/user", handlers.CreateUser)
 	v1.Get("/user/profile/:id", handlers.GetUserProfile)
+
+	auth := v1.Group("/auth")
+	auth.Post("/login", handlers.Login)
 
 	// ?type=0|1|2
 	v1.Put("/media", handlers.SaveFile)

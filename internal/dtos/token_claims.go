@@ -1,0 +1,8 @@
+package dtos
+
+import "github.com/golang-jwt/jwt/v5"
+
+type CustomTokenClaims struct {
+	jwt.RegisteredClaims
+	TokenType string `json:"token_type"`
+}

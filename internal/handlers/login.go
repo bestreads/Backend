@@ -2,10 +2,12 @@ package handlers
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/middlewares"
 	"github.com/bestreads/Backend/internal/services"
+	"github.com/bestreads/Backend/internal/types"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -74,7 +76,7 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	// Check credentials
-	match, checkCredentialsErr := services.CheckCredentials(ctx, *requestPayload)
+	match, userId, checkCredentialsErr := services.CheckCredentials(ctx, *requestPayload)
 	invalidCredentialsMsg := "Invalid email or password"
 	if errors.Is(checkCredentialsErr, gorm.ErrRecordNotFound) {
 		log.Debug().Err(checkCredentialsErr).Msg("Login failed: User not found")
@@ -99,7 +101,35 @@ func Login(c *fiber.Ctx) error {
 			})
 	}
 
-	// ToDo: Generate access JWT and set as Cookie
+	// Create access JWT
+	accessJwt, accessJwtGenerationErr := services.GenerateToken(ctx, strconv.FormatUint(uint64(userId), 10), types.AccessToken)
+	if accessJwtGenerationErr != nil {
+		msg := "Failed to create access JWT"
+		log.Error().Err(accessJwtGenerationErr).Msg(msg)
+		return c.Status(fiber.StatusInternalServerError).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: msg,
+			})
+	}
+
+	// Create refresh JWT
+	refreshJwt, refreshJwtGenerationErr := services.GenerateToken(ctx, strconv.FormatUint(uint64(userId), 10), types.RefreshToken)
+	if refreshJwtGenerationErr != nil {
+		msg := "Failed to create refresh JWT"
+		log.Error().Err(refreshJwtGenerationErr).Msg(msg)
+		return c.Status(fiber.StatusInternalServerError).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: msg,
+			})
+	}
+
+	// Create cookies
+	accessTokenCookie := services.CreateCookie(ctx, types.AccessToken, accessJwt, true)
+	refreshTokenCookie := services.CreateCookie(ctx, types.RefreshToken, refreshJwt, true)
+
+	// Set tokens as cookies
+	c.Cookie(accessTokenCookie)
+	c.Cookie(refreshTokenCookie)
 
 	return c.Status(fiber.StatusOK).
 		JSON(dtos.GenericRestResponse{
