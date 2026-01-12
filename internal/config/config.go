@@ -9,17 +9,18 @@ import (
 )
 
 type Config struct {
-	ApiBaseURL  string `mapstructure:"API_BASE_URL"`
-	ApiPort     string `mapstructure:"API_PORT"`
-	ApiBasePath string `mapstructure:"API_BASE_PATH"`
-	DebugLevel  string `mapstructure:"DEBUG_LEVEL"`
-	DBHost      string `mapstructure:"DB_HOST"`
-	DBPort      string `mapstructure:"DB_PORT"`
-	DBSslMode   bool   `mapstructure:"DB_SSL_MODE"`
-	DBName      string `mapstructure:"DB_NAME"`
-	DBUsername  string `mapstructure:"DB_USERNAME"`
-	DBPassword  string `mapstructure:"DB_PASSWORD"`
-	DataPath    string `mapstructure:"DATA_PATH"`
+	ApiBaseURL       string `mapstructure:"API_BASE_URL"`
+	ApiPort          string `mapstructure:"API_PORT"`
+	ApiBasePath      string `mapstructure:"API_BASE_PATH"`
+	DebugLevel       string `mapstructure:"DEBUG_LEVEL"`
+	DBHost           string `mapstructure:"DB_HOST"`
+	DBPort           string `mapstructure:"DB_PORT"`
+	DBSslMode        bool   `mapstructure:"DB_SSL_MODE"`
+	DBName           string `mapstructure:"DB_NAME"`
+	DBUsername       string `mapstructure:"DB_USERNAME"`
+	DBPassword       string `mapstructure:"DB_PASSWORD"`
+	DataPath         string `mapstructure:"DATA_PATH"`
+	OpenRouterApiKey string `mapstructure:"OPEN_ROUTER_API_KEY"`
 }
 
 func Load() *Config {
