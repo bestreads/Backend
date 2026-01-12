@@ -44,6 +44,7 @@ func Load() *Config {
 	viper.SetDefault("ACCESS_TOKEN_DURATION_MINUTES", 15)
 	viper.SetDefault("REFRESH_TOKEN_DURATION_DAYS", 100)
 	viper.SetDefault("TOKEN_REFRESH_PATH", "/v1/auth/refresh")
+	viper.SetDefault("TOKEN_SECURE_FLAG", true)
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
