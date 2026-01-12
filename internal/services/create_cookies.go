@@ -8,7 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// CreateCookie generates an fiber cookie for the given token type.
+// CreateCookie generates a fiber cookie for the given token type.
 // If 'rememberMe' is true, the cookie includes a MaxAge, making it persistent for the specified duration.
 func CreateCookie(ctx context.Context, tokenType types.TokenType, cookieJwt string, rememberMe bool) *fiber.Cookie {
 	cfg := middlewares.Config(ctx)
