@@ -27,7 +27,7 @@ func CreateCookie(ctx context.Context, tokenType types.TokenType, cookieJwt stri
 		Domain:   cfg.ApiDomain,
 		Secure:   cfg.TokenSecureFlag,
 		HTTPOnly: true,
-		SameSite: fiber.CookieSameSiteLaxMode,
+		SameSite: fiber.CookieSameSiteStrictMode,
 	}
 
 	// Set MaxAge only if 'rememberMe' is true
