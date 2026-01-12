@@ -37,6 +37,9 @@ func GenerateToken(ctx context.Context, userId string, tokenType types.TokenType
 		secretKey = cfg.RefreshTokenSecretKey
 	case types.AccessToken:
 		secretKey = cfg.AccessTokenSecretKey
+	default:
+		err := fmt.Errorf("invalid token type: %s", tokenType)
+		return "", err
 	}
 
 	if len(secretKey) == 0 {
