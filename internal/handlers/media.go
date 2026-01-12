@@ -36,7 +36,7 @@ func SaveFile(c *fiber.Ctx) error {
 
 	log.Info().Msg(fmt.Sprintf("using path %d", hash))
 
-	url := fmt.Sprintf("%s://%s/api/v1/media/%d", cfg.ApiProtocol, cfg.ApiDomain, hash)
+	url := fmt.Sprintf("%s://%s%s/v1/media/%d", cfg.ApiProtocol, cfg.ApiDomain, cfg.ApiBasePath, hash)
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"url": url,
 	})
