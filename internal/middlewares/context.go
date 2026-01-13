@@ -5,8 +5,10 @@ import (
 	"strconv"
 
 	"github.com/bestreads/Backend/internal/config"
+	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 	"resty.dev/v3"
@@ -67,4 +69,14 @@ func HttpClient(ctx context.Context) *resty.Client {
 
 func Validator(ctx context.Context) *validator.Validate {
 	return ctx.Value(ValidatorKey).(*validator.Validate)
+}
+
+func User(c *fiber.Ctx) *dtos.CustomTokenClaims {
+	// Get token from request context
+	accessToken := c.Locals(TokenKey).(*jwt.Token)
+
+	// Retrieve claims from token
+	claims := accessToken.Claims.(*dtos.CustomTokenClaims)
+
+	return claims
 }
