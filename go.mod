@@ -5,6 +5,7 @@ go 1.25.4
 require (
 	github.com/alexedwards/argon2id v1.0.0
 	github.com/go-playground/validator/v10 v10.28.0
+	github.com/gofiber/contrib/jwt v1.1.2
 	github.com/gofiber/fiber/v2 v2.52.10
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/viper v1.21.0
@@ -14,6 +15,7 @@ require (
 )
 
 require (
+	github.com/MicahParks/keyfunc/v2 v2.1.0 // indirect
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.10 // indirect
