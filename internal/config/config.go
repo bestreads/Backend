@@ -20,6 +20,7 @@ type Config struct {
 	DBUsername       string `mapstructure:"DB_USERNAME"`
 	DBPassword       string `mapstructure:"DB_PASSWORD"`
 	DataPath         string `mapstructure:"DATA_PATH"`
+	DevMode          bool   `mapstructure:"DEV_MODE"`
 	OpenRouterApiKey string `mapstructure:"OPEN_ROUTER_API_KEY"`
 }
 
@@ -33,6 +34,7 @@ func Load() *Config {
 	viper.SetDefault("DB_PORT", "5432")
 	viper.SetDefault("DB_SSL_MODE", false)
 	viper.SetDefault("DATA_PATH", "./data/")
+	viper.SetDefault("DEV_MODE", false)
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
