@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"strconv"
-
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/middlewares"
 	"github.com/bestreads/Backend/internal/services"
@@ -11,14 +9,12 @@ import (
 )
 
 func TokenRefresh(c *fiber.Ctx) error {
+	user := middlewares.User(c)
 	ctx := c.UserContext()
 	log := middlewares.Logger(ctx)
 
-	// ToDo: Get userId from refresh jwt through auth validation middleware
-	userId := 0
-
 	// Create access JWT
-	accessJwt, accessJwtGenerationErr := services.GenerateToken(ctx, strconv.FormatUint(uint64(userId), 10), types.AccessToken)
+	accessJwt, accessJwtGenerationErr := services.GenerateToken(ctx, user.Subject, types.AccessToken)
 	if accessJwtGenerationErr != nil {
 		msg := "Failed to create access JWT"
 		log.Error().Err(accessJwtGenerationErr).Msg(msg)
@@ -29,7 +25,7 @@ func TokenRefresh(c *fiber.Ctx) error {
 	}
 
 	// Create refresh JWT
-	refreshJwt, refreshJwtGenerationErr := services.GenerateToken(ctx, strconv.FormatUint(uint64(userId), 10), types.RefreshToken)
+	refreshJwt, refreshJwtGenerationErr := services.GenerateToken(ctx, user.Subject, types.RefreshToken)
 	if refreshJwtGenerationErr != nil {
 		msg := "Failed to create refresh JWT"
 		log.Error().Err(refreshJwtGenerationErr).Msg(msg)
