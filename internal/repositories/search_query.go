@@ -11,26 +11,17 @@ import (
 func SearchBooks(ctx context.Context, query string, limit int) ([]database.Book, error) {
 	var books []database.Book
 
-	// Split query in einzelne Wörter
-	words := strings.Fields(strings.TrimSpace(query))
-	if len(words) == 0 {
+	query = strings.TrimSpace(query)
+	if query == "" {
 		return books, nil
 	}
 
-	// jedes Wort wird in title, author und description gesucht
-	dbQuery := middlewares.DB(ctx)
+	pattern := "%" + strings.ToLower(query) + "%"
 
-	for i, word := range words {
-		pattern := "%" + strings.ToLower(word) + "%"
-		condition := "LOWER(title) LIKE ? OR LOWER(author) LIKE ? OR LOWER(description) LIKE ?"
+	err := middlewares.DB(ctx).
+		Where("LOWER(title) LIKE ? OR LOWER(author) LIKE ?", pattern, pattern).
+		Limit(limit).
+		Find(&books).Error
 
-		if i == 0 {
-			dbQuery = dbQuery.Where(condition, pattern, pattern, pattern)
-		} else {
-			dbQuery = dbQuery.Or(condition, pattern, pattern, pattern)
-		}
-	}
-
-	err := dbQuery.Limit(limit).Find(&books).Error
 	return books, err
 }
