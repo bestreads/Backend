@@ -15,29 +15,28 @@ const (
 	TokenKey = "user_token"
 )
 
-// AccessProtected is for regular api routes (access token)
-func AccessProtected(cfg *config.Config, log zerolog.Logger) fiber.Handler {
-	return jwtware.New(jwtware.Config{
-		SigningKey:  jwtware.SigningKey{Key: []byte(cfg.AccessTokenSecretKey)},
-		TokenLookup: fmt.Sprintf("cookie:%s", types.AccessToken),
-		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			msg := "Invalid or expired access token"
-			log.Debug().Err(err).Msg(msg)
-			return c.Status(fiber.StatusUnauthorized).
-				JSON(dtos.GenericRestErrorResponse{
-					Description: msg,
-				})
-		},
-	})
-}
+// Protected secures api routes
+func Protected(cfg *config.Config, log zerolog.Logger, tokenType types.TokenType) fiber.Handler {
+	// Get correct secret
+	var tokenSecretKey []byte
+	if tokenType == types.RefreshToken {
+		tokenSecretKey = []byte(cfg.RefreshTokenSecretKey)
+	} else {
+		tokenSecretKey = []byte(cfg.AccessTokenSecretKey)
+	}
 
-// RefreshProtected is just for /refresh endpoint (refresh token)
-func RefreshProtected(cfg *config.Config, log zerolog.Logger) fiber.Handler {
 	return jwtware.New(jwtware.Config{
-		SigningKey:  jwtware.SigningKey{Key: []byte(cfg.RefreshTokenSecretKey)},
-		TokenLookup: fmt.Sprintf("cookie:%s", types.RefreshToken),
+		SigningKey: jwtware.SigningKey{
+			JWTAlg: jwtware.HS256,
+			Key:    tokenSecretKey,
+		},
+		TokenLookup: fmt.Sprintf("cookie:%s", tokenType),
+
+		// ContextKey stores the data in c.Locals(TokenKey)
+		ContextKey: TokenKey,
+
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			msg := "Invalid or expired refresh token"
+			msg := "Invalid or expired token"
 			log.Debug().Err(err).Msg(msg)
 			return c.Status(fiber.StatusUnauthorized).
 				JSON(dtos.GenericRestErrorResponse{
