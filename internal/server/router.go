@@ -13,6 +13,7 @@ func setRoutes(cfg *config.Config, app *fiber.App) {
 	auth := v1.Group("/auth")
 	auth.Post("/login", handlers.Login)
 	auth.Post("/refresh", handlers.TokenRefresh)
+	auth.Post("/logout", handlers.Logout)
 
 	v1.Get("/health", handlers.Health)
 	v1.Get("/books/search", handlers.BookSearch)
