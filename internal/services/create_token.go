@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -39,11 +38,6 @@ func GenerateToken(ctx context.Context, userId string, tokenType types.TokenType
 		secretKey = cfg.AccessTokenSecretKey
 	default:
 		err := fmt.Errorf("invalid token type: %s", tokenType)
-		return "", err
-	}
-
-	if len(secretKey) == 0 {
-		err := errors.New("Failed to get token secret key")
 		return "", err
 	}
 

@@ -12,7 +12,7 @@ import (
 )
 
 func SaveFile(c *fiber.Ctx) error {
-	ctx := c.Context()
+	ctx := c.UserContext()
 	log := middlewares.Logger(ctx)
 	cfg := middlewares.Config(ctx)
 

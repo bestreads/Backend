@@ -21,6 +21,7 @@ type Config struct {
 	DBUsername                 string `mapstructure:"DB_USERNAME"`
 	DBPassword                 string `mapstructure:"DB_PASSWORD"`
 	DataPath                   string `mapstructure:"DATA_PATH"`
+	DevMode                    bool   `mapstructure:"DEV_MODE"`
 	OpenRouterApiKey           string `mapstructure:"OPEN_ROUTER_API_KEY"`
 	RefreshTokenSecretKey      string `mapstructure:"REFRESH_TOKEN_SECRET_KEY"`
 	AccessTokenSecretKey       string `mapstructure:"ACCESS_TOKEN_SECRET_KEY"`
@@ -44,6 +45,8 @@ func Load() *Config {
 	viper.SetDefault("ACCESS_TOKEN_DURATION_MINUTES", 15)
 	viper.SetDefault("REFRESH_TOKEN_DURATION_DAYS", 100)
 	viper.SetDefault("TOKEN_REFRESH_PATH", "/api/v1/auth/refresh")
+	viper.SetDefault("TOKEN_SECURE_FLAG", true)
+	viper.SetDefault("DEV_MODE", false)
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")

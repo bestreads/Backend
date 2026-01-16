@@ -10,7 +10,7 @@ import (
 
 // CreateCookie generates a fiber cookie for the given token type.
 // If 'rememberMe' is true, the cookie includes a MaxAge, making it persistent for the specified duration.
-func CreateCookie(ctx context.Context, tokenType types.TokenType, cookieJwt string, rememberMe bool) *fiber.Cookie {
+func CreateCookie(ctx context.Context, tokenType types.TokenType, cookieJwt string, rememberMe bool, expired bool) *fiber.Cookie {
 	cfg := middlewares.Config(ctx)
 
 	// Set cookie path according to jwt type
@@ -27,7 +27,7 @@ func CreateCookie(ctx context.Context, tokenType types.TokenType, cookieJwt stri
 		Domain:   cfg.ApiDomain,
 		Secure:   cfg.TokenSecureFlag,
 		HTTPOnly: true,
-		SameSite: fiber.CookieSameSiteLaxMode,
+		SameSite: fiber.CookieSameSiteStrictMode,
 	}
 
 	// Set MaxAge only if 'rememberMe' is true
@@ -38,6 +38,11 @@ func CreateCookie(ctx context.Context, tokenType types.TokenType, cookieJwt stri
 		case types.RefreshToken:
 			cookie.MaxAge = int(cfg.RefreshTokenDurationDays) * 24 * 60 * 60
 		}
+	}
+
+	// Set maxAge to -1 if expired is true
+	if expired {
+		cookie.MaxAge = -1
 	}
 
 	return cookie

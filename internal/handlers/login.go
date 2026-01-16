@@ -124,8 +124,8 @@ func Login(c *fiber.Ctx) error {
 	}
 
 	// Create cookies
-	accessTokenCookie := services.CreateCookie(ctx, types.AccessToken, accessJwt, true)
-	refreshTokenCookie := services.CreateCookie(ctx, types.RefreshToken, refreshJwt, true)
+	accessTokenCookie := services.CreateCookie(ctx, types.AccessToken, accessJwt, true, false)
+	refreshTokenCookie := services.CreateCookie(ctx, types.RefreshToken, refreshJwt, true, false)
 
 	// Set tokens as cookies
 	c.Cookie(accessTokenCookie)
