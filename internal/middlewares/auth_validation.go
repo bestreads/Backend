@@ -33,6 +33,7 @@ func Protected(cfg *config.Config, log zerolog.Logger, tokenType types.TokenType
 		TokenLookup: fmt.Sprintf("cookie:%s", tokenType),
 
 		// ContextKey stores the data in c.Locals(TokenKey)
+		Claims:     &dtos.CustomTokenClaims{},
 		ContextKey: TokenKey,
 
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
