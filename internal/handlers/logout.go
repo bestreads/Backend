@@ -8,7 +8,7 @@ import (
 )
 
 func Logout(c *fiber.Ctx) error {
-	ctx := c.Context()
+	ctx := c.UserContext()
 
 	// Generate expired cookies with empty values to override the existing ones, and thus remove them
 	accessTokenCookie := services.CreateCookie(ctx, types.AccessToken, "", true, false)
