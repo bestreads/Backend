@@ -6,6 +6,8 @@ import (
 
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/middlewares"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func SearchBooks(ctx context.Context, query string, limit int) ([]database.Book, error) {
@@ -24,4 +26,18 @@ func SearchBooks(ctx context.Context, query string, limit int) ([]database.Book,
 		Find(&books).Error
 
 	return books, err
+}
+
+func CreateBookNoISBN(tx *gorm.DB, ctx context.Context, b *database.Book) error {
+	return gorm.G[database.Book](tx.
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "isbn"}},
+			DoNothing: true,
+		})).
+		Create(ctx, b)
+}
+
+func CreateBookISBN(tx *gorm.DB, ctx context.Context, b *database.Book) error {
+	return gorm.G[database.Book](tx).
+		Create(ctx, b)
 }

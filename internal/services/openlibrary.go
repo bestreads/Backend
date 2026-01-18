@@ -16,11 +16,12 @@ import (
 
 const openLibrarySearchURL = "https://openlibrary.org/search.json" // Open Library Search-Endpoint
 const openLibraryBaseURL = "https://openlibrary.org"               // Basis-URL für Work-Details und Beschreibungen
-const maxConcurrentRequests = 7                                    // Rate limiting: maximal 7 gleichzeitige Requests
+const maxConcurrentRequests = 15                                   // Rate limiting: maximal 15 gleichzeitige Requests
 
 // SearchOpenLibrary führt eine OpenLibrary-Suche aus, lädt parallel zugehörige Work-Descriptions
 // und speichert die gefundenen Bücher inklusive Beschreibung und Cover-URL in der Datenbank.
 func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query string, limit string) error {
+	// log := middlewares.Logger(ctx)
 	var response dtos.OpenLibraryResponse
 
 	newQuery := strings.ReplaceAll(query, " ", "+")
@@ -41,59 +42,109 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 		return err
 	}
 
-	// Descriptions parallel fetchen mit Rate Limiting
+	// Descriptions und Cover-URLs parallel fetchen mit Rate Limiting
 	descriptions := fetchAllDescriptions(httpClient, ctx, response.Docs)
+	coverURLs := fetchAllCoverURLs(ctx, response.Docs)
 
 	// Transaction für alle Buch-Inserts
 	if err := middlewares.DB(ctx).Transaction(func(tx *gorm.DB) error {
 		for i, doc := range response.Docs {
-			isbn := ""
-			if len(doc.ISBN) > 0 {
-				isbn = doc.ISBN[0]
-			}
+			fmt.Println(doc.ISBN)
+			fmt.Println()
 
-			author := ""
-			if len(doc.AuthorName) > 0 {
-				author = doc.AuthorName[0]
-			}
-
-			coverURL := ""
-			if doc.CoverID > 0 {
-				coverURL = fmt.Sprintf("https://covers.openlibrary.org/b/id/%d-M.jpg", doc.CoverID)
-			}
-
-			description := descriptions[i]
-			if description == "" {
-				description = "Es gibt keine Beschreibung für dieses Buch."
-			}
-
-			book := database.Book{
-				Title:       doc.Title,
-				Author:      author,
-				ISBN:        isbn,
-				ReleaseDate: uint64(doc.FirstYear),
-				Description: description,
-				CoverURL:    coverURL,
-			}
-
-			// Für Bücher mit ISBN: ON CONFLICT DO NOTHING für idempotentes Verhalten (keine race condition)
-			// Für Bücher ohne ISBN: normales Create (jedes Buch wird eingefügt)
-			if isbn != "" {
-				if err := tx.Clauses(clause.OnConflict{
-					Columns:   []clause.Column{{Name: "isbn"}},
-					DoNothing: true,
-				}).Create(&book).Error; err != nil {
-					return fmt.Errorf("failed to save book to database: %w", err)
-				}
-			} else {
-				if err := tx.Create(&book).Error; err != nil {
-					return fmt.Errorf("failed to save book to database: %w", err)
-				}
+			if err := insertBook(tx, ctx, doc, descriptions[i], coverURLs[i]); err != nil {
+				return err
 			}
 		}
 		return nil
 	}); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// fetchAllCoverURLs holt alle Cover-Bilder parallel und cached sie
+func fetchAllCoverURLs(ctx context.Context, docs []dtos.OpenLibraryBook) []string {
+	coverURLs := make([]string, len(docs))
+
+	var wg sync.WaitGroup
+	semaphore := make(chan struct{}, maxConcurrentRequests) // Rate limiting
+
+	for i, doc := range docs {
+		wg.Add(1)
+		go func(index int, coverID int) {
+			defer wg.Done()
+
+			if coverID <= 0 {
+				coverURLs[index] = ""
+				return
+			}
+
+			semaphore <- struct{}{}        // Acquire
+			defer func() { <-semaphore }() // Release
+
+			hash, err := database.CacheMedia(fmt.Sprintf("https://covers.openlibrary.org/b/id/%d-M.jpg", coverID))
+			if err != nil {
+				coverURLs[index] = ""
+				return
+			}
+			coverURLs[index] = fmt.Sprintf("%s/api/v1/media/%d", middlewares.Config(ctx).ApiBaseURL, hash)
+		}(i, doc.CoverID)
+	}
+
+	wg.Wait()
+	return coverURLs
+}
+
+// insertBook fügt ein Buch in die Datenbank ein
+func insertBook(tx *gorm.DB, ctx context.Context, doc dtos.OpenLibraryBook, description string, cachedURL string) error {
+	isbn := ""
+	if len(doc.ISBN) > 0 {
+		isbn = doc.ISBN
+	}
+
+	println(isbn)
+
+	author := ""
+	if len(doc.AuthorName) > 0 {
+		author = doc.AuthorName[0]
+	}
+
+	if description == "" {
+		description = "Es gibt keine Beschreibung für dieses Buch."
+	}
+
+	book := database.Book{
+		Title:       doc.Title,
+		Author:      author,
+		ISBN:        isbn,
+		ReleaseDate: uint64(doc.FirstYear),
+		Description: description,
+		CoverURL:    cachedURL,
+	}
+
+	// Für Bücher mit ISBN: ON CONFLICT DO NOTHING für idempotentes Verhalten
+	// Für Bücher ohne ISBN: normales Create (jedes Buch wird eingefügt)
+	// ich weiß nicht, wieso man die db sachen nicht per funktionsaufruf machen kann,
+	// aber es ist so.
+	if isbn != "" {
+		err := gorm.G[database.Book](tx.
+			Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "isbn"}},
+				DoNothing: true,
+			})).
+			Create(ctx, &book)
+		if err != nil {
+			return fmt.Errorf("failed to save book to database: %w", err)
+		}
+	} else {
+		println("check failed 2")
+		err := gorm.G[database.Book](tx).
+			Create(ctx, &book)
+		if err != nil {
+			return fmt.Errorf("failed to save book to database: %w", err)
+		}
 	}
 
 	return nil
