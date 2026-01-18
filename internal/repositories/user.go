@@ -5,12 +5,19 @@ import (
 
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/middlewares"
+	"gorm.io/gorm"
 )
 
 func GetUserByID(ctx context.Context, uid uint) (database.User, error) {
 	var user database.User
 	err := middlewares.DB(ctx).Where("id = ?", uid).First(&user).Error
 	return user, err
+}
+
+func GetUserByEmail(ctx context.Context, email string) (database.User, error) {
+	db := middlewares.DB(ctx)
+	user, getUserErr := gorm.G[database.User](db).Where("email = ?", email).First(ctx)
+	return user, getUserErr
 }
 
 func CountUserLibraryBooks(ctx context.Context, uid uint) (int64, error) {

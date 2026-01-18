@@ -12,11 +12,13 @@ import (
 )
 
 func SaveFile(c *fiber.Ctx) error {
+	ctx := c.UserContext()
+	log := middlewares.Logger(ctx)
+	cfg := middlewares.Config(ctx)
+
 	c.Accepts("image/png")
 	c.Accepts("image/webp")
 	c.Accepts("image/jpg")
-
-	log := middlewares.Logger(c.UserContext())
 
 	if len(c.Body()) < 1 {
 		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
@@ -34,7 +36,7 @@ func SaveFile(c *fiber.Ctx) error {
 
 	log.Info().Msg(fmt.Sprintf("using path %d", hash))
 
-	url := fmt.Sprintf("%s/api/v1/media/%d", middlewares.Config(c.UserContext()).ApiBaseURL, hash)
+	url := fmt.Sprintf("%s://%s%s/v1/media/%d", cfg.ApiProtocol, cfg.ApiDomain, cfg.ApiBasePath, hash)
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"url": url,
 	})

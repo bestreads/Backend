@@ -44,7 +44,7 @@ func Start(cfg *config.Config, logger zerolog.Logger) {
 	// Attach logger + db to ctx for every request
 	app.Use(middlewares.ContextMiddleware(cfg, logger, db, httpClient, validator))
 
-	setRoutes(cfg, app)
+	setRoutes(cfg, logger, app)
 
 	logger.Info().Msg(fmt.Sprintf("API started on :%s", cfg.ApiPort))
 	if err := app.Listen(fmt.Sprintf(":%s", cfg.ApiPort)); err != nil {
