@@ -30,9 +30,6 @@ func setRoutes(cfg *config.Config, log zerolog.Logger, app *fiber.App) {
 	v1.Get("/books/search", handlers.BookSearch)
 	v1.Get("/books/:bid", handlers.GetBook)
 
-	// ?limit=n
-	v1.Get("/post", handlers.GetPost)
-
 	// ?type=0|1|2
 	v1.Put("/media", handlers.SaveFile)
 	// ?type=0|1|2
@@ -41,11 +38,14 @@ func setRoutes(cfg *config.Config, log zerolog.Logger, app *fiber.App) {
 	// Apply the authentication middleware to a new sub-group
 	v1Protected := v1.Group("/", middlewares.Protected(cfg, log, types.AccessToken))
 
-	// --- Protected routes ---
+	// ?limit=number
+	v1Protected.Get("/post", handlers.GetPost)
 
+	// --- Protected routes ---
 	v1user := v1Protected.Group("/user")
 	v1user.Get("/", handlers.GetOwnUser)
 	v1user.Post("/", handlers.CreateUser)
+	v1user.Put("/", handlers.ChangeUserData)
 	v1user.Get("/profile/:id", handlers.GetUserProfile)
 	v1user.Post("/post", handlers.CreatePost)
 
