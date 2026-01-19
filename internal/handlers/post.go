@@ -91,7 +91,7 @@ func CreatePost(c *fiber.Ctx) error {
 		return returnInternalError(c)
 	}
 
-	return nil
+	return c.SendStatus(fiber.StatusOK)
 }
 
 func returnInternalError(c *fiber.Ctx) error {
