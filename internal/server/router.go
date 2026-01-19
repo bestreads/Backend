@@ -33,27 +33,26 @@ func setRoutes(cfg *config.Config, log zerolog.Logger, app *fiber.App) {
 	// ?limit=n
 	v1.Get("/post", handlers.GetPost)
 
-	v1.Post("/user", handlers.CreateUser)
-	v1.Get("/user/profile/:id", handlers.GetUserProfile)
-
 	// ?type=0|1|2
 	v1.Put("/media", handlers.SaveFile)
 	// ?type=0|1|2
 	v1.Get("/media/:KEY", handlers.GetFile)
-
-	v1user := v1.Group("/user/:ID") // vllt hier so eine auth middleware
-	v1user.Post("/post", handlers.CreatePost)
-
-	// ?limit=n
-	v1user.Get("/lib", handlers.GetLibrary)
-	v1user.Post("/lib", handlers.AddToLibrary)
-	v1user.Put("/lib/:BID", handlers.UpdateReadingStatus)
-	v1user.Delete("/lib/:BID", handlers.DeleteFromLibrary)
 
 	// Apply the authentication middleware to a new sub-group
 	v1Protected := v1.Group("/", middlewares.Protected(cfg, log, types.AccessToken))
 
 	// --- Protected routes ---
 
-	v1Protected.Get("/test", handlers.Health)
+	v1user := v1Protected.Group("/user")
+	v1user.Get("/", handlers.GetOwnUser)
+	v1user.Post("/", handlers.CreateUser)
+	v1user.Get("/profile/:id", handlers.GetUserProfile)
+	v1userWithId := v1user.Group("/:ID")
+	v1userWithId.Post("/post", handlers.CreatePost)
+
+	// ?limit=n
+	v1userWithId.Get("/lib", handlers.GetLibrary)
+	v1userWithId.Post("/lib", handlers.AddToLibrary)
+	v1userWithId.Put("/lib/:BID", handlers.UpdateReadingStatus)
+	v1userWithId.Delete("/lib/:BID", handlers.DeleteFromLibrary)
 }
