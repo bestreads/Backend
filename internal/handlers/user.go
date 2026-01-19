@@ -75,12 +75,34 @@ func ChangeUserData(c *fiber.Ctx) error {
 
 	// Parse request payload
 	var payload dtos.UpdateUserRequest
-	if err = c.BodyParser(&payload); err != nil {
-		log.Warn().Err(err).Msg("failed to parse request body")
-		return c.Status(fiber.StatusBadRequest).
-			JSON(dtos.GenericRestErrorResponse{
-				Description: "Invalid request body",
-			})
+	payload.Email = c.FormValue("email")
+	payload.Username = c.FormValue("username")
+	payload.Password = c.FormValue("password")
+
+	// Handle Profilbild-Upload
+	file, err := c.FormFile("pfp")
+	if err == nil && file != nil {
+		// Öffne die Datei
+		openedFile, openErr := file.Open()
+		if openErr != nil {
+			log.Warn().Err(openErr).Msg("failed to open uploaded file")
+			return c.Status(fiber.StatusBadRequest).
+				JSON(dtos.GenericRestErrorResponse{
+					Description: "Failed to process uploaded file",
+				})
+		}
+		defer openedFile.Close()
+
+		// Lese die Datei-Daten
+		fileData := make([]byte, file.Size)
+		if _, readErr := openedFile.Read(fileData); readErr != nil {
+			log.Warn().Err(readErr).Msg("failed to read uploaded file")
+			return c.Status(fiber.StatusBadRequest).
+				JSON(dtos.GenericRestErrorResponse{
+					Description: "Failed to read uploaded file",
+				})
+		}
+		payload.Pfp = fileData
 	}
 
 	// Prüfe ob mindestens ein Feld gesetzt ist

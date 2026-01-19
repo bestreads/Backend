@@ -5,12 +5,14 @@ import (
 	"fmt"
 
 	"github.com/alexedwards/argon2id"
+	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/middlewares"
 	"github.com/bestreads/Backend/internal/repositories"
 )
 
 func UpdateUser(ctx context.Context, userId uint, req dtos.UpdateUserRequest) error {
+	cfg := middlewares.Config(ctx)
 	// Hole aktuellen User aus DB
 	user, err := repositories.GetUserByID(ctx, userId)
 	if err != nil {
@@ -26,8 +28,15 @@ func UpdateUser(ctx context.Context, userId uint, req dtos.UpdateUserRequest) er
 		user.Email = req.Email
 	}
 
-	if req.Pfp != "" {
-		user.Pfp = req.Pfp
+	if len(req.Pfp) > 0 {
+		// Speichere das Bild im Filestore
+		hash, err := database.FileStoreRaw(req.Pfp)
+		if err != nil {
+			return fmt.Errorf("failed to store profile picture: %w", err)
+		}
+		// Generiere den Link zum Bild
+		url := fmt.Sprintf("%s://%s:%s%s/v1/media/%d", cfg.ApiProtocol, cfg.ApiDomain, cfg.ApiPort, cfg.ApiBasePath, hash)
+		user.Pfp = url
 	}
 
 	if req.Password != "" {
