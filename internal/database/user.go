@@ -8,8 +8,8 @@ import (
 // "User", weil gorm das automatisch in "users" umbenennt
 type User struct {
 	gorm.Model
-	Email         string `gorm:"not null;unique;index"`
-	Password_hash string
-	Username      string `gorm:"not null"`
-	Pfp           string
+	Email          string `gorm:"not null;unique;index"`
+	Password_hash  string
+	Username       string `gorm:"not null"`
+	ProfilePicture string
 }

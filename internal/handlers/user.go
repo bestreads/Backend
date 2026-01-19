@@ -102,7 +102,7 @@ func ChangeUserData(c *fiber.Ctx) error {
 					Description: "Failed to read uploaded file",
 				})
 		}
-		payload.Pfp = fileData
+		payload.ProfilePicture = fileData
 	}
 
 	// Prüfe ob mindestens ein Feld gesetzt ist
