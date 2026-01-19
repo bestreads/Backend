@@ -39,11 +39,9 @@ func setRoutes(cfg *config.Config, log zerolog.Logger, app *fiber.App) {
 	v1userProtected := v1Protected.Group("/user")
 	v1userProtected.Get("/", handlers.GetOwnUser)
 	v1userProtected.Get("/profile/:id", handlers.GetUserProfile)
-	v1userWithIdProtected := v1userProtected.Group("/:ID")
-	v1userWithIdProtected.Post("/post", handlers.CreatePost)
 
 	// ?limit=n
-	v1libProtected := v1userWithIdProtected.Group("/lib")
+	v1libProtected := v1userProtected.Group("/:ID/lib")
 	v1libWithoutUserIdProtected := v1userProtected.Group("/lib")
 	v1libProtected.Get("/", handlers.GetLibrary)
 	v1libProtected.Post("/", handlers.AddToLibrary)
