@@ -80,7 +80,7 @@ func ChangeUserData(c *fiber.Ctx) error {
 	payload.Password = c.FormValue("password")
 
 	// Handle Profilbild-Upload
-	file, err := c.FormFile("pfp")
+	file, err := c.FormFile("ProfilePicture")
 	if err == nil && file != nil {
 		// Öffne die Datei
 		openedFile, openErr := file.Open()

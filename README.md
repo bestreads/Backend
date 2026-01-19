@@ -40,7 +40,7 @@ returned json objs mit den reviews
 ```json
 [
    {
-      "Pfp":"",
+      "ProfilePicture":"",
       "Username":"",
       "Uid": "2",
       "Book":{
