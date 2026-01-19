@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"io"
 	"strconv"
 
 	"github.com/bestreads/Backend/internal/dtos"
@@ -91,6 +92,16 @@ func ChangeUserData(c *fiber.Ctx) error {
 		}
 	}
 	if file != nil {
+		// Maximale Upload-Größe: 5 MB
+		const maxUploadSize = 5 << 20 // 5 MB
+		if file.Size > maxUploadSize {
+			log.Warn().Int64("size", file.Size).Msg("uploaded file too large")
+			return c.Status(fiber.StatusRequestEntityTooLarge).
+				JSON(dtos.GenericRestErrorResponse{
+					Description: "Profile picture must be smaller than 5 MB",
+				})
+		}
+
 		// Öffne die Datei
 		openedFile, openErr := file.Open()
 		if openErr != nil {
@@ -102,10 +113,9 @@ func ChangeUserData(c *fiber.Ctx) error {
 		}
 		defer openedFile.Close()
 
-		// Lese die Datei-Daten
-		fileData := make([]byte, file.Size)
-		if _, readErr := openedFile.Read(fileData); readErr != nil {
-			log.Warn().Err(readErr).Msg("failed to read uploaded file")
+		fileData, err := io.ReadAll(io.LimitReader(openedFile, maxUploadSize+1))
+		if err != nil {
+			log.Warn().Err(err).Msg("failed to read uploaded file")
 			return c.Status(fiber.StatusBadRequest).
 				JSON(dtos.GenericRestErrorResponse{
 					Description: "Failed to read uploaded file",
