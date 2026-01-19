@@ -62,23 +62,28 @@ func GetPost(c *fiber.Ctx) error {
 }
 
 func CreatePost(c *fiber.Ctx) error {
+	user := middlewares.User(c)
 	log := middlewares.Logger(c.UserContext())
 
-	id, err := strconv.ParseUint(c.Params("ID"), 10, 32)
-	if err != nil {
-		log.Error().Err(err).Msg("parsing id error")
-		return returnInternalError(c)
+	// Get user id from token
+	userId, getUserIdErr := user.GetId()
+	if getUserIdErr != nil {
+		msg := "Failed to get user id"
+		log.Error().Err(getUserIdErr).Msg(msg)
+		return c.Status(fiber.StatusInternalServerError).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: msg,
+			})
 	}
 
-	log.Info().Msg(fmt.Sprintf("POST post for user %d", id))
+	log.Info().Msg(fmt.Sprintf("POST post for user %d", userId))
 
-	pl := struct {
-		Bid      uint   `json:"bid"`
-		Content  string `json:"content"`
-		ImageURL string `json:"imageurl"`
+	payload := struct {
+		Bid     uint   `json:"bid"`
+		Content string `json:"content"`
 	}{}
 
-	if err := c.BodyParser(&pl); err != nil {
+	if err := c.BodyParser(&payload); err != nil {
 		log.Error().Err(err).Msg("json parsing error")
 		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
 			Description: "JSON invalid",
@@ -86,7 +91,7 @@ func CreatePost(c *fiber.Ctx) error {
 
 	}
 
-	if err = services.CreatePost(c.UserContext(), uint(id), pl.Bid, pl.Content, pl.ImageURL); err != nil {
+	if err := services.CreatePost(c.UserContext(), uint(userId), payload.Bid, payload.Content); err != nil {
 		log.Error().Err(err).Msg("error creating post")
 		return returnInternalError(c)
 	}

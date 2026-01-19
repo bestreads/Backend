@@ -43,7 +43,7 @@ func convert(p []database.Post) ([]dtos.PostResponse, error) {
 	return res, nil
 }
 
-func CreatePost(c context.Context, id uint, bid uint, content string, imageurl string) error {
+func CreatePost(c context.Context, id uint, bid uint, content string) error {
 	// leeres bild wird einfach "0", das ist okay glaube ich
 	post := database.Post{
 		UserID:  id,
