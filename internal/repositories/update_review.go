@@ -8,10 +8,10 @@ import (
 	"gorm.io/gorm"
 )
 
-func UpdateReview(ctx context.Context, userId, bookId, rating uint) error {
+func UpdateReview(ctx context.Context, userId, bookId, rating uint) (int, error) {
 	db := middlewares.DB(ctx)
-	_, updateReviewErr := gorm.G[database.Library](db).
+	rowsAffected, updateReviewErr := gorm.G[database.Library](db).
 		Where("user_id = ? AND book_id = ?", userId, bookId).
 		Update(ctx, "Rating", rating)
-	return updateReviewErr
+	return rowsAffected, updateReviewErr
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/bestreads/Backend/internal/repositories"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
 
 func UpdateReview(c *fiber.Ctx) error {
@@ -57,7 +56,7 @@ func UpdateReview(c *fiber.Ctx) error {
 		}
 
 		// Fallback for other errs
-		return c.Status(fiber.StatusBadRequest).
+		return c.Status(fiber.StatusInternalServerError).
 			JSON(dtos.GenericRestErrorResponse{
 				Description: "Validation failed",
 			})
@@ -75,15 +74,16 @@ func UpdateReview(c *fiber.Ctx) error {
 	}
 
 	// Update review in db
-	updateReviewErr := repositories.UpdateReview(ctx, userId, requestPayload.BookID, requestPayload.Rating)
-	if errors.Is(updateReviewErr, gorm.ErrRecordNotFound) {
+	rowsAffected, updateReviewErr := repositories.UpdateReview(ctx, userId, requestPayload.BookID, requestPayload.Rating)
+	if rowsAffected == 0 {
 		msg := "No review found for the given book"
 		log.Error().Err(updateReviewErr).Msg(msg)
 		return c.Status(fiber.StatusNotFound).
 			JSON(dtos.GenericRestErrorResponse{
 				Description: msg,
 			})
-	} else if updateReviewErr != nil {
+	}
+	if updateReviewErr != nil {
 		msg := "Failed to update review"
 		log.Error().Err(updateReviewErr).Msg(msg)
 		return c.Status(fiber.StatusInternalServerError).
