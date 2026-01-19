@@ -154,10 +154,10 @@ func ChangeUserData(c *fiber.Ctx) error {
 	// Business Logic im Service
 	if err := services.UpdateUser(ctx, uint(userId), payload); err != nil {
 		log.Error().Err(err).Msg("failed to update user")
-		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			return c.Status(fiber.StatusBadRequest).
+		if errors.Is(err, gorm.ErrDuplicatedKey) || errors.Is(err, services.ErrUserConflict) {
+			return c.Status(fiber.StatusConflict).
 				JSON(dtos.GenericRestErrorResponse{
-					Description: "Email already in use",
+					Description: "Username or email already in use",
 				})
 		}
 		return c.Status(fiber.StatusInternalServerError).
