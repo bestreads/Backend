@@ -47,9 +47,9 @@ func setRoutes(cfg *config.Config, log zerolog.Logger, app *fiber.App) {
 	v1user.Get("/", handlers.GetOwnUser)
 	v1user.Post("/", handlers.CreateUser)
 	v1user.Get("/profile/:id", handlers.GetUserProfile)
-	v1userWithId := v1user.Group("/:ID")
-	v1userWithId.Post("/post", handlers.CreatePost)
+	v1user.Post("/post", handlers.CreatePost)
 
+	v1userWithId := v1user.Group("/:ID")
 	// ?limit=n
 	v1userWithId.Get("/lib", handlers.GetLibrary)
 	v1userWithId.Post("/lib", handlers.AddToLibrary)

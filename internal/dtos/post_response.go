@@ -8,5 +8,4 @@ type PostResponse struct {
 	Uid      uint
 	Book     database.Book
 	Content  string
-	ImageUrl string
 }
