@@ -65,7 +65,7 @@ func UpdateUser(ctx context.Context, userId uint, req dtos.UpdateUserRequest) er
 
 	// Speichere die Änderungen
 	if err := db.Save(&user).Error; err != nil {
-		return fmt.Errorf("Failed to update user: %w", err)
+		return fmt.Errorf("failed to update user: %w", err)
 	}
 
 	return nil
