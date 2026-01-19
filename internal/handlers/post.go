@@ -66,10 +66,10 @@ func CreatePost(c *fiber.Ctx) error {
 	log := middlewares.Logger(c.UserContext())
 
 	// Get user id from token
-	userId, getUserIdErr := user.GetId()
-	if getUserIdErr != nil {
+	userId, err := user.GetId()
+	if err != nil {
 		msg := "Failed to get user id"
-		log.Error().Err(getUserIdErr).Msg(msg)
+		log.Error().Err(err).Msg(msg)
 		return c.Status(fiber.StatusInternalServerError).
 			JSON(dtos.GenericRestErrorResponse{
 				Description: msg,
