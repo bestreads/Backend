@@ -14,7 +14,7 @@ func GetPost(c *fiber.Ctx) error {
 	log := middlewares.Logger(c.UserContext())
 	log.Info().Msg("GET post")
 
-	pl := struct {
+	payload := struct {
 		Uid uint `json:"uid"`
 	}{}
 
@@ -45,14 +45,14 @@ func GetPost(c *fiber.Ctx) error {
 	}
 
 	// dieser parser ist eigentlich terror shit, man kann ein leeres obj ("{}") eingeben und kriegt struct {uid: 0, bid: 0} zurück xD
-	if err := c.BodyParser(&pl); err != nil {
+	if err := c.BodyParser(&payload); err != nil {
 		log.Error().Err(err).Msg("JSON Parser Error!")
 		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
 			Description: "JSON invalid",
 		})
 	}
 
-	posts, err := services.GetPost(c.UserContext(), pl.Uid, int(nlimit))
+	posts, err := services.GetPost(c.UserContext(), payload.Uid, int(nlimit))
 	if err != nil {
 		log.Error().Err(err).Msg("error getting posts")
 		return returnInternalError(c)
@@ -88,10 +88,23 @@ func CreatePost(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
 			Description: "JSON invalid",
 		})
-
 	}
 
-	if err := services.CreatePost(c.UserContext(), uint(userId), payload.Bid, payload.Content); err != nil {
+	if payload.Bid == 0 {
+		log.Error().Msg("Invalid bookID: bid is missing or 0")
+		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
+			Description: "book id invalid or missing",
+		})
+	}
+
+	if payload.Content == "" {
+		log.Error().Err(err).Msg("No content: " + payload.Content)
+		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
+			Description: "Content must be present",
+		})
+	}
+
+	if err = services.CreatePost(c.UserContext(), uint(userId), payload.Bid, payload.Content); err != nil {
 		log.Error().Err(err).Msg("error creating post")
 		return returnInternalError(c)
 	}
