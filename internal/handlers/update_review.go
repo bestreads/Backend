@@ -49,7 +49,7 @@ func UpdateReview(c *fiber.Ctx) error {
 					case "max":
 						return c.Status(fiber.StatusBadRequest).
 							JSON(dtos.GenericRestErrorResponse{
-								Description: "The rating must be between 1 and 5.",
+								Description: "The rating must be between 1 and 5",
 							})
 					}
 				}
