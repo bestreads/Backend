@@ -78,7 +78,5 @@ func GetUserProfile(c *fiber.Ctx) error {
 		AccountCreatedAtYear: uint(user.CreatedAt.Year()),
 		BooksInLibrary:       uint(countBooks),
 		Posts:                uint(countPosts),
-		Follower:             0,
-		Following:            0,
 	})
 }

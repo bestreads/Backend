@@ -7,6 +7,4 @@ type ProfileResponse struct {
 	AccountCreatedAtYear uint   `json:"accountCreatedAtYear"`
 	BooksInLibrary       uint   `json:"booksInLibrary"`
 	Posts                uint   `json:"posts"`
-	Follower             uint   `json:"follower"`
-	Following            uint   `json:"following"`
 }
