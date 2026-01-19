@@ -18,6 +18,9 @@ func setRoutes(cfg *config.Config, log zerolog.Logger, app *fiber.App) {
 
 	// --- Public routes ---
 
+	v1user := v1.Group("/user")
+	v1user.Post("/", handlers.CreateUser)
+
 	auth := v1.Group("/auth")
 	auth.Post("/login", handlers.Login)
 	auth.Post("/refresh",
@@ -27,32 +30,37 @@ func setRoutes(cfg *config.Config, log zerolog.Logger, app *fiber.App) {
 	auth.Post("/logout", handlers.Logout)
 
 	v1.Get("/health", handlers.Health)
-	v1.Get("/books/search", handlers.BookSearch)
-	v1.Get("/books/:bid", handlers.GetBook)
-
-	// ?type=0|1|2
-	v1.Put("/media", handlers.SaveFile)
-	// ?type=0|1|2
-	v1.Get("/media/:KEY", handlers.GetFile)
 
 	// Apply the authentication middleware to a new sub-group
 	v1Protected := v1.Group("/", middlewares.Protected(cfg, log, types.AccessToken))
 
 	// ?limit=number
 	v1Protected.Get("/post", handlers.GetPost)
+  
+	v1userProtected := v1Protected.Group("/user")
+	v1userProtected.Get("/", handlers.GetOwnUser)
+  v1user.Put("/", handlers.ChangeUserData)
+	v1userProtected.Get("/profile/:id", handlers.GetUserProfile)
 
-	// --- Protected routes ---
-	v1user := v1Protected.Group("/user")
-	v1user.Get("/", handlers.GetOwnUser)
-	v1user.Post("/", handlers.CreateUser)
-	v1user.Put("/", handlers.ChangeUserData)
-	v1user.Get("/profile/:id", handlers.GetUserProfile)
-	v1user.Post("/post", handlers.CreatePost)
-
-	v1userWithId := v1user.Group("/:ID")
 	// ?limit=n
-	v1userWithId.Get("/lib", handlers.GetLibrary)
-	v1userWithId.Post("/lib", handlers.AddToLibrary)
-	v1userWithId.Put("/lib/:BID", handlers.UpdateReadingStatus)
-	v1userWithId.Delete("/lib/:BID", handlers.DeleteFromLibrary)
+	v1libProtected := v1userProtected.Group("/:ID/lib")
+	v1libWithoutUserIdProtected := v1userProtected.Group("/lib")
+	v1libProtected.Get("/", handlers.GetLibrary)
+	v1libProtected.Post("/", handlers.AddToLibrary)
+	v1libWithoutUserIdProtected.Put("/review", handlers.UpdateReview)
+	v1libProtected.Put("/:BID", handlers.UpdateReadingStatus)
+	v1libProtected.Delete("/:BID", handlers.DeleteFromLibrary)
+
+	v1booksProtected := v1Protected.Group("/book")
+	v1booksProtected.Get("/search", handlers.BookSearch)
+	v1booksProtected.Get("/:bid", handlers.GetBook)
+
+	// ?limit=n
+	v1Protected.Get("/post", handlers.GetPost)
+
+	v1mediaProtected := v1Protected.Group("/media")
+	// ?type=0|1|2
+	v1mediaProtected.Put("/", handlers.SaveFile)
+	// ?type=0|1|2
+	v1mediaProtected.Get("/:KEY", handlers.GetFile)
 }
