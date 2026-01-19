@@ -46,10 +46,9 @@ func convert(p []database.Post) ([]dtos.PostResponse, error) {
 func CreatePost(c context.Context, id uint, bid uint, content string, imageurl string) error {
 	// leeres bild wird einfach "0", das ist okay glaube ich
 	post := database.Post{
-		UserID:   id,
-		BookID:   bid,
-		Content:  content,
-		ImageUrl: imageurl,
+		UserID:  id,
+		BookID:  bid,
+		Content: content,
 	}
 
 	return repositories.CreateDbPost(c, post)
