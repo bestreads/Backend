@@ -81,7 +81,16 @@ func ChangeUserData(c *fiber.Ctx) error {
 
 	// Handle Profilbild-Upload
 	file, err := c.FormFile("ProfilePicture")
-	if err == nil && file != nil {
+	if err != nil {
+		if !errors.Is(err, fiber.ErrUnprocessableEntity) {
+			log.Warn().Err(err).Msg("failed to parse uploaded profile picture")
+			return c.Status(fiber.StatusBadRequest).
+				JSON(dtos.GenericRestErrorResponse{
+					Description: "Failed to parse uploaded file",
+				})
+		}
+	}
+	if file != nil {
 		// Öffne die Datei
 		openedFile, openErr := file.Open()
 		if openErr != nil {
