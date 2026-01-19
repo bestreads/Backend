@@ -33,7 +33,7 @@ func UpdateReview(c *fiber.Ctx) error {
 		var valErrs validator.ValidationErrors
 		if errors.As(validationErr, &valErrs) {
 			for _, e := range valErrs {
-				// Check if format err is from email field
+				// Check if format err is from rating field
 				if e.Field() == "Rating" {
 					switch e.Tag() {
 					case "required":
