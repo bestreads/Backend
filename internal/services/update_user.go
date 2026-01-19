@@ -48,8 +48,23 @@ func UpdateUser(ctx context.Context, userId uint, req dtos.UpdateUserRequest) er
 		user.Password_hash = passwordHash
 	}
 
+	db := middlewares.DB(ctx)
+
+	// Prüfe, ob die neue E-Mail oder der neue Benutzername bereits von einem anderen Benutzer verwendet wird
+	if req.Username != "" || req.Email != "" {
+		var count int64
+		if err := db.Model(&user).
+			Where("id <> ? AND (username = ? OR email = ?)", user.ID, user.Username, user.Email).
+			Count(&count).Error; err != nil {
+			return fmt.Errorf("failed to check user uniqueness: %w", err)
+		}
+		if count > 0 {
+			return fmt.Errorf("username or email already in use")
+		}
+	}
+
 	// Speichere die Änderungen
-	if err := middlewares.DB(ctx).Save(&user).Error; err != nil {
+	if err := db.Save(&user).Error; err != nil {
 		return fmt.Errorf("Failed to update user: %w", err)
 	}
 
