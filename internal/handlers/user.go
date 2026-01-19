@@ -148,7 +148,7 @@ func ChangeUserData(c *fiber.Ctx) error {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
 			return c.Status(fiber.StatusBadRequest).
 				JSON(dtos.GenericRestErrorResponse{
-					Description: "Email invalid",
+					Description: "Email already in use",
 				})
 		}
 		return c.Status(fiber.StatusInternalServerError).
