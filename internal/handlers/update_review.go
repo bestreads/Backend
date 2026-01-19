@@ -57,7 +57,7 @@ func UpdateReview(c *fiber.Ctx) error {
 		}
 
 		// Fallback for other errs
-		return c.Status(fiber.StatusInternalServerError).
+		return c.Status(fiber.StatusBadRequest).
 			JSON(dtos.GenericRestErrorResponse{
 				Description: "Validation failed",
 			})
