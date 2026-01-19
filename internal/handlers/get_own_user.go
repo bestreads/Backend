@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"strconv"
 
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/middlewares"
@@ -11,30 +10,24 @@ import (
 	"gorm.io/gorm"
 )
 
-func GetUserProfile(c *fiber.Ctx) error {
+func GetOwnUser(c *fiber.Ctx) error {
+	user := middlewares.User(c)
 	ctx := c.UserContext()
 	log := middlewares.Logger(ctx)
 
-	// get and validate userID
-	userId, err := strconv.ParseUint(c.Params("id"), 10, 64)
-	if err != nil {
-		log.Warn().Err(err).Str("id", c.Params("id")).Msg("invalid user ID format")
-		return c.Status(fiber.StatusBadRequest).
+	// Get user id from token
+	userId, getUserIdErr := user.GetId()
+	if getUserIdErr != nil {
+		msg := "Failed to get user id"
+		log.Error().Err(getUserIdErr).Msg(msg)
+		return c.Status(fiber.StatusInternalServerError).
 			JSON(dtos.GenericRestErrorResponse{
-				Description: "User ID must be a valid positive number",
-			})
-	}
-
-	if userId == 0 {
-		log.Warn().Msg("user ID cannot be zero")
-		return c.Status(fiber.StatusBadRequest).
-			JSON(dtos.GenericRestErrorResponse{
-				Description: "User ID must be greater than 0",
+				Description: msg,
 			})
 	}
 
 	// Get user data for the given user id
-	userObj, getUserErr := services.GetUserById(ctx, uint(userId))
+	userObj, getUserErr := services.GetUserById(ctx, userId)
 	if errors.Is(getUserErr, gorm.ErrRecordNotFound) {
 		msg := "User could not be found"
 		log.Error().Err(getUserErr).Uint64("user-id", uint64(userId)).Msg(msg)
@@ -52,5 +45,5 @@ func GetUserProfile(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).
-		JSON(userObj.ProfileResponse)
+		JSON(userObj)
 }
