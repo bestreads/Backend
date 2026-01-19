@@ -16,7 +16,6 @@ func GetPost(c *fiber.Ctx) error {
 
 	pl := struct {
 		Uid uint `json:"uid"`
-		Bid uint `json:"bid"`
 	}{}
 
 	limit := c.Query("limit")
@@ -53,7 +52,7 @@ func GetPost(c *fiber.Ctx) error {
 		})
 	}
 
-	posts, err := services.GetPost(c.UserContext(), pl.Uid, pl.Bid, int(nlimit))
+	posts, err := services.GetPost(c.UserContext(), pl.Uid, int(nlimit))
 	if err != nil {
 		log.Error().Err(err).Msg("error getting posts")
 		return returnInternalError(c)

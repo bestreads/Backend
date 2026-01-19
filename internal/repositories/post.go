@@ -13,12 +13,12 @@ import (
 //  2. gorm wird (sporadisch) andere sachen preloaden, keine ahnung wieso?
 //  3. eigentlich wollte ich eine api machen, mit der man nur die metadaten von einem user lädt.
 //     würde ein bisschen hübscher in json aussehen, das habe ich aber mal nicht gemacht
-func GetPost(ctx context.Context, uid uint, bid uint, limit int) ([]database.Post, error) {
+func GetPost(ctx context.Context, uid uint, limit int) ([]database.Post, error) {
 	return gorm.G[database.Post](middlewares.DB(ctx)).
 		Limit(limit).
 		Preload("User", nil).
 		Preload("Book", nil).
-		Where("user_id = ? AND book_id = ?", uid, bid).
+		Where("user_id = ?", uid).
 		Find(ctx)
 }
 

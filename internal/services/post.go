@@ -2,13 +2,14 @@ package services
 
 import (
 	"context"
+
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/repositories"
 )
 
-func GetPost(c context.Context, uid uint, bid uint, limit int) ([]dtos.PostResponse, error) {
-	posts, err := repositories.GetPost(c, uid, bid, limit)
+func GetPost(c context.Context, uid uint, limit int) ([]dtos.PostResponse, error) {
+	posts, err := repositories.GetPost(c, uid, limit)
 	if err != nil {
 		return []dtos.PostResponse{}, err
 	}
@@ -36,7 +37,6 @@ func convert(p []database.Post) ([]dtos.PostResponse, error) {
 			Uid:      post.User.ID,
 			Book:     post.Book,
 			Content:  post.Content,
-			ImageUrl: post.ImageUrl,
 		}
 	}
 
