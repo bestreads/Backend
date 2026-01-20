@@ -12,11 +12,31 @@ import (
 )
 
 func GetLibrary(c *fiber.Ctx) error {
-	log := middlewares.Logger(c.UserContext())
-	id, err := strconv.ParseUint(c.Params("ID"), 10, 32)
-	if err != nil {
-		log.Error().Err(err).Msg("parsing id error")
-		return err
+	user := middlewares.User(c)
+	ctx := c.UserContext()
+	log := middlewares.Logger(ctx)
+
+	var userId uint
+	id := c.Query("userId")
+	if id != "" {
+		parsedId, err := strconv.Atoi(id)
+		if err != nil {
+			log.Error().Err(err).Msg("error parsing userId")
+			return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
+				Description: "Invalid userId",
+			})
+		}
+		userId = uint(parsedId)
+	} else {
+		ownId, err := user.GetId()
+		if err != nil {
+			msg := "Failed to get user id"
+			log.Error().Err(err).Msg(msg)
+			return c.Status(fiber.StatusInternalServerError).JSON(dtos.GenericRestErrorResponse{
+				Description: msg,
+			})
+		}
+		userId = ownId
 	}
 
 	limit := c.Query("limit")
@@ -24,7 +44,7 @@ func GetLibrary(c *fiber.Ctx) error {
 		limit = "-1"
 	}
 
-	log.Info().Msg(fmt.Sprintf("GET library for user %d with limit %s", id, limit))
+	log.Info().Msg(fmt.Sprintf("GET library for user %d with limit %s", userId, limit))
 
 	nlimit, err := strconv.ParseInt(limit, 10, 32)
 	if err != nil {
@@ -34,7 +54,7 @@ func GetLibrary(c *fiber.Ctx) error {
 		})
 	}
 
-	result, err := services.QueryLibrary(c.UserContext(), uint(id), nlimit)
+	result, err := services.QueryLibrary(c.UserContext(), uint(userId), nlimit)
 	if err != nil {
 		log.Error().Err(err).Msg("error getting user library")
 		return c.Status(fiber.StatusInternalServerError).JSON(dtos.GenericRestErrorResponse{
