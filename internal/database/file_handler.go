@@ -11,16 +11,29 @@ import (
 
 // speichert die gegebene daten im filestore. gibt den hash (schlüssel) wieder zurück
 func FileStoreRaw(data []byte) (uint64, error) {
-	h := fnv.New64a()
-	h.Write(data) // Write auf hash.Hash gibt nie einen Fehler zurück
-	hash := h.Sum64()
 
-	err := os.WriteFile(prefix(strconv.FormatUint(hash, 10)), data, 0640)
+	// ist das irgendwie nirgendswo dokumentiert?
+	// WIE BENUTZT MAN DIE APIs?
+	// https://gist.github.com/wjkoh/cd97f19cae5a9ac8a9fa61d4c6931b9e
+	hash := fnv.New64a()
+	_, err := hash.Write(data)
 	if err != nil {
 		return 0, err
 	}
 
-	return hash, nil
+	// auf 128bit fnv hashes scheint die sum-funktion
+	// einfach nen byte-array mit dem wert auszuspucken
+	// daher jetzt einfach 64bit
+	res := hash.Sum64()
+
+	fmt.Printf("hash: %d", res)
+
+	err = os.WriteFile(prefix(strconv.FormatUint(res, 10)), data, 0640)
+	if err != nil {
+		return 0, err
+	}
+
+	return res, nil
 }
 
 // Deprecated: mach mal nicht
