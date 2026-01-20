@@ -9,7 +9,7 @@ import (
 // RecalculateRatingAvg gets all ratings of the given book and saves the updated rating avg
 func RecalculateRatingAvg(ctx context.Context, bookId uint) error {
 	// Get library entries for the given book
-	libraries, readLibrariesErr := repositories.ReadLibrariesForBook(ctx, bookId)
+	libraries, readLibrariesErr := repositories.ReadLibrariesForBook(ctx, bookId, true)
 	if readLibrariesErr != nil {
 		return readLibrariesErr
 	}
