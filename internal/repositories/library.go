@@ -28,12 +28,16 @@ func QueryLibraryDb(ctx context.Context, uid uint, limit int64) ([]database.Libr
 		Find(ctx)
 }
 
-func ReadLibrariesForBook(ctx context.Context, bookId uint) ([]database.Library, error) {
+func ReadLibrariesForBook(ctx context.Context, bookId uint, filterZeroRatings bool) ([]database.Library, error) {
 	db := middlewares.DB(ctx)
 
-	libraries, librariesReadErr := gorm.G[database.Library](db).
-		Where("book_id = ?", bookId).
-		Find(ctx)
+	query := gorm.G[database.Library](db).
+		Where("book_id = ?", bookId)
+
+	if filterZeroRatings {
+		query = query.Where("rating != 0")
+	}
+	libraries, librariesReadErr := query.Find(ctx)
 
 	return libraries, librariesReadErr
 }
