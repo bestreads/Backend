@@ -67,7 +67,7 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 					return err
 				}
 				cfg := middlewares.Config(ctx)
-				coverURL = fmt.Sprintf("%s://%s%s/media/%d", cfg.ApiProtocol, cfg.ApiDomain, cfg.ApiBasePath, cached)
+				coverURL = fmt.Sprintf("%s://%s%s/v1/media/%d", cfg.ApiProtocol, cfg.ApiDomain, cfg.ApiBasePath, cached)
 			}
 
 			description := descriptions[i]
