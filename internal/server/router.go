@@ -34,6 +34,8 @@ func setRoutes(cfg *config.Config, log zerolog.Logger, app *fiber.App) {
 	// Apply the authentication middleware to a new sub-group
 	v1Protected := v1.Group("/", middlewares.Protected(cfg, log, types.AccessToken))
 
+	// --- Protected routes ---
+
 	// ?limit=number
 	v1Protected.Get("/post", handlers.GetPost)
   
