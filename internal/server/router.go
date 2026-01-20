@@ -36,9 +36,6 @@ func setRoutes(cfg *config.Config, log zerolog.Logger, app *fiber.App) {
 
 	// --- Protected routes ---
 
-	// ?limit=number
-	v1Protected.Get("/post", handlers.GetPost)
-  
 	v1userProtected := v1Protected.Group("/user")
 	v1userProtected.Get("/", handlers.GetOwnUser)
   v1user.Put("/", handlers.ChangeUserData)
