@@ -30,7 +30,7 @@ func GetUserById(ctx context.Context, userId uint) (*dtos.OwnProfileResponse, er
 		ProfileResponse: dtos.ProfileResponse{
 			UserID:               userId,
 			Username:             userObj.Username,
-			ProfilePicture:       userObj.Pfp,
+			ProfilePicture:       userObj.ProfilePicture,
 			AccountCreatedAtYear: uint(userObj.CreatedAt.Year()),
 			BooksInLibrary:       uint(countBooks),
 			Posts:                uint(countPosts),

@@ -31,3 +31,34 @@ func CountUserPosts(ctx context.Context, uid uint) (int64, error) {
 	err := middlewares.DB(ctx).Model(&database.Post{}).Where("user_id = ?", uid).Count(&count).Error
 	return count, err
 }
+
+// CheckUserUniqueness prüft, ob ein Benutzername oder eine E-Mail bereits von einem anderen Benutzer verwendet wird.
+// Gibt true zurück, wenn Username/Email bereits existiert (Konflikt), false wenn verfügbar.
+func CheckUserUniqueness(ctx context.Context, excludeUserID uint, username, email string) (bool, error) {
+	if username == "" && email == "" {
+		return false, nil
+	}
+
+	var count int64
+	db := middlewares.DB(ctx)
+	query := db.Model(&database.User{}).Where("id <> ?", excludeUserID)
+
+	if username != "" && email != "" {
+		query = query.Where("username = ? OR email = ?", username, email)
+	} else if username != "" {
+		query = query.Where("username = ?", username)
+	} else {
+		query = query.Where("email = ?", email)
+	}
+
+	if err := query.Count(&count).Error; err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+// SaveUser speichert die Änderungen eines Users in der Datenbank.
+func SaveUser(ctx context.Context, user *database.User) error {
+	return middlewares.DB(ctx).Save(user).Error
+}

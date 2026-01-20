@@ -32,11 +32,11 @@ func convert(p []database.Post) ([]dtos.PostResponse, error) {
 	res := make([]dtos.PostResponse, len(p))
 	for i, post := range p {
 		res[i] = dtos.PostResponse{
-			Pfp:      post.User.Pfp,
-			Username: post.User.Username,
-			Uid:      post.User.ID,
-			Book:     post.Book,
-			Content:  post.Content,
+			ProfilePicture: post.User.ProfilePicture,
+			Username:       post.User.Username,
+			Uid:            post.User.ID,
+			Book:           post.Book,
+			Content:        post.Content,
 		}
 	}
 
