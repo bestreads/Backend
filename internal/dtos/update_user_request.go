@@ -4,7 +4,7 @@ type UpdateUserRequest struct {
 	Email          string `json:"email" validate:"omitempty,email"`
 	Username       string `json:"username" validate:"omitempty,min=3,max=32"`
 	Password       string `json:"password" validate:"omitempty,min=12"`
-	ProfilePicture []byte `json:"-"`
+	ProfilePicture []byte `json:"profile_picture"`
 }
 
 // IsEmpty prüft ob alle Felder leer sind
