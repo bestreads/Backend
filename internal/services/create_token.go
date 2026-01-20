@@ -14,11 +14,23 @@ import (
 func GenerateToken(ctx context.Context, userId string, tokenType types.TokenType) (string, error) {
 	cfg := middlewares.Config(ctx)
 
+	// Get correct expiry duration
+	var duration time.Duration
+	switch tokenType {
+	case types.AccessToken:
+		duration = time.Duration(cfg.AccessTokenDurationMinutes) * time.Minute
+	case types.RefreshToken:
+		duration = time.Duration(cfg.RefreshTokenDurationDays) * 24 * time.Hour
+	default:
+		duration = 15 * time.Minute
+	}
+
 	// Create the claims for the token
 	claims := dtos.CustomTokenClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:  userId,
-			IssuedAt: jwt.NewNumericDate(time.Now()),
+			Subject:   userId,
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
 		},
 		TokenType: string(tokenType),
 	}
