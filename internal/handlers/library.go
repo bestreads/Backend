@@ -120,7 +120,7 @@ func UpdateReadingStatus(c *fiber.Ctx) error {
 	}
 
 	if err := services.UpdateReadState(c.UserContext(), userId, uint(bid), payload.State); err != nil {
-		log.Error().Err(err).Msg("error updating statee")
+		log.Error().Err(err).Msg("error updating state")
 		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
 			Description: "error updating state",
 		})
