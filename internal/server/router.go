@@ -41,14 +41,14 @@ func setRoutes(cfg *config.Config, log zerolog.Logger, app *fiber.App) {
 	v1userProtected.Put("/", handlers.ChangeUserData)
 	v1userProtected.Get("/profile/:id", handlers.GetUserProfile)
 
+	// library
 	// ?limit=n
-	v1libProtected := v1userProtected.Group("/:ID/lib")
-	v1libWithoutUserIdProtected := v1userProtected.Group("/lib")
-	v1libProtected.Get("/", handlers.GetLibrary)
-	v1libProtected.Post("/", handlers.AddToLibrary)
-	v1libWithoutUserIdProtected.Put("/review", handlers.UpdateReview)
-	v1libProtected.Put("/:BID", handlers.UpdateReadingStatus)
-	v1libProtected.Delete("/:BID", handlers.DeleteFromLibrary)
+	v1LibProtected := v1Protected.Group("/lib")
+	v1LibProtected.Get("/", handlers.GetLibrary)
+	v1LibProtected.Post("/", handlers.AddToLibrary)
+	v1LibProtected.Put("/review", handlers.UpdateReview)
+	v1LibProtected.Put("/:BID", handlers.UpdateReadingStatus)
+	v1LibProtected.Delete("/:BID", handlers.DeleteFromLibrary)
 
 	v1booksProtected := v1Protected.Group("/book")
 	v1booksProtected.Get("/search", handlers.BookSearch)
