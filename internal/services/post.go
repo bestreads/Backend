@@ -14,7 +14,7 @@ func GetPost(c context.Context, uid uint, limit int) ([]dtos.PostResponse, error
 		return []dtos.PostResponse{}, err
 	}
 
-	return convert(posts)
+	return ConvertPost(posts)
 }
 
 func GetGlobalPosts(ctx context.Context, limit int) ([]dtos.PostResponse, error) {
