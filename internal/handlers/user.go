@@ -81,7 +81,7 @@ func ChangeUserData(c *fiber.Ctx) error {
 	payload.Password = c.FormValue("password")
 
 	// Handle Profilbild-Upload
-	file, err := c.FormFile("ProfilePicture")
+	file, err := c.FormFile("profile_picture")
 	if err != nil && !errors.Is(err, fiber.ErrUnprocessableEntity) && err.Error() != "there is no uploaded file associated with the given key" {
 		log.Warn().Err(err).Msg("failed to parse uploaded profile picture")
 		return c.Status(fiber.StatusBadRequest).
