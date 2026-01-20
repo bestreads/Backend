@@ -38,7 +38,7 @@ func UpdateUser(ctx context.Context, userId uint, req dtos.UpdateUserRequest) er
 			return fmt.Errorf("failed to store profile picture: %w", err)
 		}
 		// Generiere den Link zum Bild
-		url := fmt.Sprintf("%s://%s:%s%s/v1/media/%d", cfg.ApiProtocol, cfg.ApiDomain, cfg.ApiPort, cfg.ApiBasePath, hash)
+		url := fmt.Sprintf("%s://%s%s/v1/media/%d", cfg.ApiProtocol, cfg.ApiDomain, cfg.ApiBasePath, hash)
 		user.ProfilePicture = url
 	}
 
