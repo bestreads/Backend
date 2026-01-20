@@ -6,6 +6,7 @@ import (
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/middlewares"
 	"github.com/bestreads/Backend/internal/repositories"
+	"github.com/bestreads/Backend/internal/services"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
@@ -87,6 +88,16 @@ func UpdateReview(c *fiber.Ctx) error {
 		msg := "Failed to update review"
 		log.Error().Err(updateReviewErr).Msg(msg)
 		return c.Status(fiber.StatusInternalServerError).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: msg,
+			})
+	}
+
+	// Update avg book rating
+	if err := services.RecalculateRatingAvg(ctx, requestPayload.BookID); err != nil {
+		msg := "Failed to recalculate the average book rating"
+		log.Error().Err(err).Msg(msg)
+		return c.Status(fiber.StatusOK).
 			JSON(dtos.GenericRestErrorResponse{
 				Description: msg,
 			})
