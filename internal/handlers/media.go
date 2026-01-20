@@ -45,7 +45,7 @@ func SaveFile(c *fiber.Ctx) error {
 func GetFile(c *fiber.Ctx) error {
 	log := middlewares.Logger(c.UserContext())
 
-	key, err := strconv.ParseUint(c.Params("KEY"), 10, 32)
+	key, err := strconv.ParseUint(c.Params("KEY"), 10, 64)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
 			Description: "bad key format",
