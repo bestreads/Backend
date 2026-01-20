@@ -10,23 +10,34 @@ import (
 )
 
 // speichert die gegebene daten im filestore. gibt den hash (schlüssel) wieder zurück
-func FileStoreRaw(data []byte) (int, error) {
-	val, err := fnv.New128a().Write(data)
+func FileStoreRaw(data []byte) (uint64, error) {
+
+	// ist das irgendwie nirgendswo dokumentiert?
+	// WIE BENUTZT MAN DIE APIs?
+	// https://gist.github.com/wjkoh/cd97f19cae5a9ac8a9fa61d4c6931b9e
+	hash := fnv.New64a()
+	_, err := hash.Write(data)
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 
-	err = os.WriteFile(prefix(strconv.Itoa(val)), data, 0640)
+	// auf 128bit fnv hashes scheint die sum-funktion
+	// einfach nen byte-array mit dem wert auszuspucken
+	// daher jetzt einfach 64bit
+	res := hash.Sum64()
+
+	fmt.Printf("hash: %d", res)
+
+	err = os.WriteFile(prefix(strconv.FormatUint(res, 10)), data, 0640)
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 
-	return val, nil
-
+	return res, nil
 }
 
 // Deprecated: mach mal nicht
-func FileStoreB64(data string) (int, error) {
+func FileStoreB64(data string) (uint64, error) {
 	// schneller pfad, kein fs-aufruf
 	if data == "" {
 		return 0, nil
@@ -62,21 +73,21 @@ func prefix(name string) string {
 }
 
 // cached den link im dateisystem. gibt den hash (schlüssel) wieder zurück
-func CacheMedia(url string) (int, error) {
+func CacheMedia(url string) (uint64, error) {
 	resp, err := http.Get(url)
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 
 	hash, err := FileStoreRaw(body)
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 
 	return hash, nil
