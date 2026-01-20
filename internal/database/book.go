@@ -4,11 +4,12 @@ package database
 
 type Book struct {
 	ID          uint   `gorm:"primaryKey"`
-	ISBN        string // das zu validieren ist nicht so ez, ich mache es noch nicht
+	ISBN        string `gorm:"uniqueIndex"` // das zu validieren ist nicht so ez, ich mache es noch nicht
 	Title       string
 	Author      string
 	CoverURL    string
 	RatingAvg   float32
 	Description string
 	ReleaseDate uint64 // am besten unix epoch oder so, erfordert keine speziellen datentypen
+	Genre       string
 }

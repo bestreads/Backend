@@ -6,3 +6,4 @@
 - repositories: database access, gorm queries
 - server:       fiber setup, init, routes
 - services:     business logic, calls repos
+- types:        custom types

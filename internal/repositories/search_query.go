@@ -2,13 +2,26 @@ package repositories
 
 import (
 	"context"
+	"strings"
 
 	"github.com/bestreads/Backend/internal/database"
-	"gorm.io/gorm"
+	"github.com/bestreads/Backend/internal/middlewares"
 )
 
-func SearchBooks(db *gorm.DB, ctx context.Context, query string) ([]database.Book, error) {
+func SearchBooks(ctx context.Context, query string, limit int) ([]database.Book, error) {
 	var books []database.Book
-	err := db.WithContext(ctx).Where("LOWER(title) LIKE LOWER(?) OR LOWER(author) LIKE LOWER(?) OR LOWER(description) LIKE LOWER(?)", "%"+query+"%", "%"+query+"%", "%"+query+"%").Find(&books).Error
+
+	query = strings.TrimSpace(query)
+	if query == "" {
+		return books, nil
+	}
+
+	pattern := "%" + strings.ToLower(query) + "%"
+
+	err := middlewares.DB(ctx).
+		Where("LOWER(title) LIKE ? OR LOWER(author) LIKE ?", pattern, pattern).
+		Limit(limit).
+		Find(&books).Error
+
 	return books, err
 }

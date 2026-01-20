@@ -9,22 +9,32 @@ import (
 )
 
 type Config struct {
-	ApiBaseURL  string `mapstructure:"API_BASE_URL"`
-	ApiPort     string `mapstructure:"API_PORT"`
-	ApiBasePath string `mapstructure:"API_BASE_PATH"`
-	DebugLevel  string `mapstructure:"DEBUG_LEVEL"`
-	DBHost      string `mapstructure:"DB_HOST"`
-	DBPort      string `mapstructure:"DB_PORT"`
-	DBSslMode   bool   `mapstructure:"DB_SSL_MODE"`
-	DBName      string `mapstructure:"DB_NAME"`
-	DBUsername  string `mapstructure:"DB_USERNAME"`
-	DBPassword  string `mapstructure:"DB_PASSWORD"`
-	DataPath    string `mapstructure:"DATA_PATH"`
+	ApiProtocol                string `mapstructure:"API_PROTOCOL"`
+	ApiDomain                  string `mapstructure:"API_DOMAIN"`
+	ApiPort                    string `mapstructure:"API_PORT"`
+	ApiBasePath                string `mapstructure:"API_BASE_PATH"`
+	DebugLevel                 string `mapstructure:"DEBUG_LEVEL"`
+	DBHost                     string `mapstructure:"DB_HOST"`
+	DBPort                     string `mapstructure:"DB_PORT"`
+	DBSslMode                  bool   `mapstructure:"DB_SSL_MODE"`
+	DBName                     string `mapstructure:"DB_NAME"`
+	DBUsername                 string `mapstructure:"DB_USERNAME"`
+	DBPassword                 string `mapstructure:"DB_PASSWORD"`
+	DataPath                   string `mapstructure:"DATA_PATH"`
+	DevMode                    bool   `mapstructure:"DEV_MODE"`
+	OpenRouterApiKey           string `mapstructure:"OPEN_ROUTER_API_KEY"`
+	RefreshTokenSecretKey      string `mapstructure:"REFRESH_TOKEN_SECRET_KEY"`
+	AccessTokenSecretKey       string `mapstructure:"ACCESS_TOKEN_SECRET_KEY"`
+	AccessTokenDurationMinutes uint   `mapstructure:"ACCESS_TOKEN_DURATION_MINUTES"`
+	RefreshTokenDurationDays   uint   `mapstructure:"REFRESH_TOKEN_DURATION_DAYS"`
+	TokenRefreshPath           string `mapstructure:"TOKEN_REFRESH_PATH"`
+	TokenSecureFlag            bool   `mapstructure:"TOKEN_SECURE_FLAG"`
 }
 
 func Load() *Config {
 	// Defaults
-	viper.SetDefault("API_BASE_URL", "http://localhost")
+	viper.SetDefault("API_PROTOCOL", "http")
+	viper.SetDefault("API_DOMAIN", "localhost")
 	viper.SetDefault("API_PORT", "3000")
 	viper.SetDefault("API_BASE_PATH", "/api")
 	viper.SetDefault("DEBUG_LEVEL", "info")
@@ -32,6 +42,11 @@ func Load() *Config {
 	viper.SetDefault("DB_PORT", "5432")
 	viper.SetDefault("DB_SSL_MODE", false)
 	viper.SetDefault("DATA_PATH", "./data/")
+	viper.SetDefault("ACCESS_TOKEN_DURATION_MINUTES", 15)
+	viper.SetDefault("REFRESH_TOKEN_DURATION_DAYS", 100)
+	viper.SetDefault("TOKEN_REFRESH_PATH", "/api/v1/auth/refresh")
+	viper.SetDefault("TOKEN_SECURE_FLAG", true)
+	viper.SetDefault("DEV_MODE", false)
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")

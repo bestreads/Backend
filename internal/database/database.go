@@ -71,10 +71,6 @@ func CreateUserBookRel(db *gorm.DB, ctx context.Context, uid uint, bid uint, s R
 	return gorm.G[Library](db).Create(ctx, &Library{UserID: uid, BookID: bid, State: s})
 }
 
-func validateISBN(unsafeIsbn string) (string, error) {
-	return unsafeIsbn, nil
-}
-
 func insertDemoData(db *gorm.DB, ctx context.Context) error {
 	// Check if demo data already exists
 	var userCount int64
