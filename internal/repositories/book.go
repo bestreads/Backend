@@ -6,7 +6,6 @@ import (
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/middlewares"
 	"github.com/rs/zerolog"
-	"gorm.io/gorm"
 )
 
 func GetBookFromDB(ctx context.Context, log zerolog.Logger, bid uint64) (database.Book, error) {
@@ -19,14 +18,4 @@ func GetBookFromDB(ctx context.Context, log zerolog.Logger, bid uint64) (databas
 	}
 
 	return book, nil
-}
-
-func UpdateBookAvgRating(ctx context.Context, bookId uint, avgRating float32) error {
-	db := middlewares.DB(ctx)
-
-	_, updateBookAvgRatingErr := gorm.G[database.Book](db).
-		Where("id = ?", bookId).
-		Update(ctx, "rating_avg", avgRating)
-
-	return updateBookAvgRatingErr
 }
