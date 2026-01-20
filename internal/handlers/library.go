@@ -44,7 +44,7 @@ func GetLibrary(c *fiber.Ctx) error {
 		limit = "-1"
 	}
 
-	log.Info().Msg(fmt.Sprintf("GET library for user %d with limit %s", userId, limit))
+	log.Debug().Msg(fmt.Sprintf("GET library for user %d with limit %s", userId, limit))
 
 	nlimit, err := strconv.ParseInt(limit, 10, 32)
 	if err != nil {
@@ -92,7 +92,7 @@ func AddToLibrary(c *fiber.Ctx) error {
 		})
 	}
 
-	log.Info().Msg(fmt.Sprintf("Adding book with id: %d for user with id: %d", payload.Bid, userId))
+	log.Debug().Msg(fmt.Sprintf("Adding book with id: %d for user with id: %d", payload.Bid, userId))
 
 	if err := services.AddToLibrary(c.UserContext(), userId, payload.Bid, payload.State); err != nil {
 		log.Error().Err(err).Msg("failed to add book to user library")
@@ -126,7 +126,7 @@ func UpdateReadingStatus(c *fiber.Ctx) error {
 		return err
 	}
 
-	log.Info().Msg(fmt.Sprintf("updating state for user %d on book %d", userId, bid))
+	log.Debug().Msg(fmt.Sprintf("updating state for user %d on book %d", userId, bid))
 
 	payload := struct {
 		State database.ReadState `json:"state"`
@@ -172,7 +172,7 @@ func DeleteFromLibrary(c *fiber.Ctx) error {
 		return err
 	}
 
-	log.Info().Msg(fmt.Sprintf("deleting book for user %d on book %d", userId, bid))
+	log.Debug().Msg(fmt.Sprintf("deleting book for user %d on book %d", userId, bid))
 
 	if err := services.DeleteFromLibrary(c.UserContext(), userId, uint(bid)); err != nil {
 		log.Error().Err(err).Msg("error deleting book from lib")
