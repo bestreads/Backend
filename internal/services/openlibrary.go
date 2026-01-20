@@ -61,6 +61,14 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 			if doc.CoverID > 0 {
 				coverURL = fmt.Sprintf("https://covers.openlibrary.org/b/id/%d-M.jpg", doc.CoverID)
 			}
+			if coverURL != "" {
+				cached, err := database.CacheMedia(coverURL)
+				if err != nil {
+					return err
+				}
+				cfg := middlewares.Config(ctx)
+				coverURL = fmt.Sprintf("%s%s%s%s/media/%d", cfg.ApiProtocol, cfg.ApiDomain, cfg.ApiPort, cfg.ApiBasePath, cached)
+			}
 
 			description := descriptions[i]
 			if description == "" {
