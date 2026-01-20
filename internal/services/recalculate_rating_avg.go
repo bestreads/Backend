@@ -15,18 +15,17 @@ func RecalculateRatingAvg(ctx context.Context, bookId uint) error {
 	}
 
 	// Calculate rating avg
-	var ratingsSum uint = 0
-	librariesCount := len(libraries)
+	var ratingsSum uint
+	var ratedCount int
 	for _, library := range libraries {
-		if library.Rating == 0 {
-			librariesCount -= 1
-		} else {
+		if library.Rating > 0 {
 			ratingsSum += library.Rating
+			ratedCount++
 		}
 	}
 	var avgRating float32 = 0
-	if len(libraries) > 0 {
-		avgRating = float32(ratingsSum) / float32(librariesCount)
+	if ratedCount > 0 {
+		avgRating = float32(ratingsSum) / float32(ratedCount)
 	}
 
 	// Update rating avg for the given book
