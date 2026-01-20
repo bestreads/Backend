@@ -28,6 +28,16 @@ func QueryLibraryDb(ctx context.Context, uid uint, limit int64) ([]database.Libr
 		Find(ctx)
 }
 
+func ReadLibrariesForBook(ctx context.Context, bookId uint) ([]database.Library, error) {
+	db := middlewares.DB(ctx)
+
+	libraries, librariesReadErr := gorm.G[database.Library](db).
+		Where("book_id = ?", bookId).
+		Find(ctx)
+
+	return libraries, librariesReadErr
+}
+
 func UpdateReadState(ctx context.Context, uid uint, bid uint, state database.ReadState) (int, error) {
 	count, err := gorm.G[database.Library](middlewares.DB(ctx)).
 		Where("user_id = ? AND book_id = ?", uid, bid).
