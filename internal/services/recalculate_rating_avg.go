@@ -19,7 +19,10 @@ func RecalculateRatingAvg(ctx context.Context, bookId uint) error {
 	for _, library := range libraries {
 		ratingsSum += library.Rating
 	}
-	avgRating := float32(ratingsSum) / float32(len(libraries))
+	var avgRating float32 = 0
+	if len(libraries) > 0 {
+		avgRating = float32(ratingsSum) / float32(len(libraries))
+	}
 
 	// Update rating avg for the given book
 	if err := repositories.UpdateBookAvgRating(ctx, bookId, avgRating); err != nil {
