@@ -41,7 +41,7 @@ func Load() *Config {
 	viper.SetDefault("DB_HOST", "localhost")
 	viper.SetDefault("DB_PORT", "5432")
 	viper.SetDefault("DB_SSL_MODE", false)
-	viper.SetDefault("DATA_PATH", "./data/")
+	viper.SetDefault("DATA_PATH", "./store")
 	viper.SetDefault("ACCESS_TOKEN_DURATION_MINUTES", 15)
 	viper.SetDefault("REFRESH_TOKEN_DURATION_DAYS", 100)
 	viper.SetDefault("TOKEN_REFRESH_PATH", "/api/v1/auth/refresh")
