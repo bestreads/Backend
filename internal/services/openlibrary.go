@@ -20,17 +20,8 @@ const maxConcurrentRequests = 7                                    // Rate limit
 
 // SearchOpenLibrary führt eine OpenLibrary-Suche aus, lädt parallel zugehörige Work-Descriptions
 // und speichert die gefundenen Bücher inklusive Beschreibung und Cover-URL in der Datenbank.
-func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query string, limit string) error {
-	var response dtos.OpenLibraryResponse
-
-	_, err := httpClient.R().
-		SetContext(ctx).
-		SetQueryParams(buildQuery(query, limit)).
-		SetResult(&response).
-		Get(openLibrarySearchURL)
-	if err != nil {
-		return err
-	}
+func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query string, limit string, searchAuthors bool) error {
+	response, err := searchBooks(ctx, httpClient, query, limit)
 
 	var (
 		res   []database.Book
@@ -70,6 +61,23 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 	}
 
 	return nil
+}
+
+func searchBooks(ctx context.Context, c *resty.Client, query string, limit string, author bool) (dtos.OpenLibraryResponse, error) {
+
+	var response dtos.OpenLibraryResponse
+
+	_, err := c.R().
+		SetContext(ctx).
+		SetQueryParams(buildQuery(query, limit)).
+		SetResult(&response).
+		Get(openLibrarySearchURL)
+	if err != nil {
+		return dtos.OpenLibraryResponse{}, err
+	}
+
+	return response, nil
+
 }
 
 func insertNewBooks(ctx context.Context, books []database.Book) error {
@@ -179,8 +187,17 @@ func extractDescription(desc any) string {
 	return ""
 }
 
-func buildQuery(query string, limit string) map[string]string {
+func buildQuery(query string, limit string, author bool) map[string]string {
 	urlfmt := strings.ReplaceAll(query, " ", "+")
+
+	if author {
+		return map[string]string{
+			"q":      "author:\"" + urlfmt + "\"",
+			"limit":  limit,
+			"fields": "isbn,title,author_name,cover_i,first_publish_year,key",
+		}
+	}
+
 	return map[string]string{
 		"q":      "title_suggest:\"" + urlfmt + "\"",
 		"limit":  limit,
