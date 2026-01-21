@@ -17,8 +17,8 @@ func AddToLibrary(ctx context.Context, uid uint, bid uint, state database.ReadSt
 	return repositories.AddBook(ctx, uid, bid, state)
 }
 
-func QueryLibrary(ctx context.Context, uid uint, limit int64) ([]dtos.LibraryResponse, error) {
-	libs, err := repositories.QueryLibraryDb(ctx, uid, limit)
+func QueryLibrary(ctx context.Context, userId uint, offset int) ([]dtos.LibraryResponse, error) {
+	libs, err := repositories.QueryLibraryDb(ctx, userId, offset)
 	if err != nil {
 		return []dtos.LibraryResponse{}, err
 	}
