@@ -21,7 +21,10 @@ const maxConcurrentRequests = 7                                    // Rate limit
 // SearchOpenLibrary führt eine OpenLibrary-Suche aus, lädt parallel zugehörige Work-Descriptions
 // und speichert die gefundenen Bücher inklusive Beschreibung und Cover-URL in der Datenbank.
 func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query string, limit string, searchAuthors bool) error {
-	response, err := searchBooks(ctx, httpClient, query, limit)
+	response, err := searchBooks(ctx, httpClient, query, limit, searchAuthors)
+	if err != nil {
+		return err
+	}
 
 	var (
 		res   []database.Book
@@ -69,7 +72,7 @@ func searchBooks(ctx context.Context, c *resty.Client, query string, limit strin
 
 	_, err := c.R().
 		SetContext(ctx).
-		SetQueryParams(buildQuery(query, limit)).
+		SetQueryParams(buildQuery(query, limit, author)).
 		SetResult(&response).
 		Get(openLibrarySearchURL)
 	if err != nil {
