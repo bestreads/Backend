@@ -14,13 +14,14 @@ func GetPost(c *fiber.Ctx) error {
 	log := middlewares.Logger(c.UserContext())
 	log.Info().Msg("GET post")
 
-	payload := struct {
-		Uid uint `json:"uid"`
-	}{}
-
 	limit := c.Query("limit")
 	if limit == "" {
-		limit = "10"
+		limit = "-1"
+	}
+
+	userId := c.Query("userId")
+	if userId == "" {
+		userId = "0"
 	}
 
 	nlimit, err := strconv.ParseInt(limit, 10, 32)
@@ -32,7 +33,16 @@ func GetPost(c *fiber.Ctx) error {
 
 	}
 
-	if len(c.Body()) == 0 {
+	nUserId, err := strconv.ParseInt(userId, 10, 32)
+	if err != nil {
+		log.Error().Err(err).Msg("error parsing int")
+		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
+			Description: "bad userId",
+		})
+
+	}
+
+	if nUserId == 0 {
 		// wir wollen posts von "allen" bekommen
 		posts, err := services.GetGlobalPosts(c.UserContext(), int(nlimit))
 		if err != nil {
@@ -41,18 +51,9 @@ func GetPost(c *fiber.Ctx) error {
 		}
 
 		return c.Status(fiber.StatusOK).JSON(posts)
-
 	}
 
-	// dieser parser ist eigentlich terror shit, man kann ein leeres obj ("{}") eingeben und kriegt struct {uid: 0, bid: 0} zurück xD
-	if err := c.BodyParser(&payload); err != nil {
-		log.Error().Err(err).Msg("JSON Parser Error!")
-		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
-			Description: "JSON invalid",
-		})
-	}
-
-	posts, err := services.GetPost(c.UserContext(), payload.Uid, int(nlimit))
+	posts, err := services.GetPost(c.UserContext(), uint(nUserId), int(nlimit))
 	if err != nil {
 		log.Error().Err(err).Msg("error getting posts")
 		return returnInternalError(c)
