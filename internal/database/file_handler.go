@@ -84,7 +84,7 @@ func getStorePath() string {
 }
 
 func prefix(name string) string {
-	// eigentlich müsssen wir hier noch den pfad sanitizen
+	// eigentlich müssen wir hier noch den pfad sanitizen
 	return fmt.Sprintf("%s/%s", getStorePath(), name)
 }
 
