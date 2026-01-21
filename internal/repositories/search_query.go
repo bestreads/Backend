@@ -20,7 +20,7 @@ func SearchBooks(ctx context.Context, query string, limit int, searchAuthor bool
 
 	if searchAuthor {
 		err := middlewares.DB(ctx).
-			Where("LOWER(author) LIKE ?", pattern, pattern).
+			Where("LOWER(author) LIKE ?", pattern).
 			Limit(limit).
 			Find(&books).Error
 		return books, err
@@ -28,7 +28,7 @@ func SearchBooks(ctx context.Context, query string, limit int, searchAuthor bool
 	}
 
 	err := middlewares.DB(ctx).
-		Where("LOWER(title) LIKE ?", pattern, pattern).
+		Where("LOWER(title) LIKE ?", pattern).
 		Limit(limit).
 		Find(&books).Error
 
