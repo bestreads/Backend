@@ -20,114 +20,129 @@ const maxConcurrentRequests = 7                                    // Rate limit
 
 // SearchOpenLibrary führt eine OpenLibrary-Suche aus, lädt parallel zugehörige Work-Descriptions
 // und speichert die gefundenen Bücher inklusive Beschreibung und Cover-URL in der Datenbank.
-func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query string, limit string) error {
-	var response dtos.OpenLibraryResponse
-
-	newQuery := strings.ReplaceAll(query, " ", "+")
-
-	params := map[string]string{
-		"q":      "title_suggest:\"" + newQuery + "\" author:\"" + newQuery + "\"",
-		"limit":  limit,
-		"fields": "isbn,title,author_name,cover_i,first_publish_year,key",
-	}
-
-	_, err := httpClient.R().
-		SetContext(ctx).
-		SetQueryParams(params).
-		SetResult(&response).
-		Get(openLibrarySearchURL)
-
+func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query string, limit string, searchAuthors bool) error {
+	response, err := searchBooks(ctx, httpClient, query, limit, searchAuthors)
 	if err != nil {
 		return err
 	}
 
-	// Descriptions parallel fetchen mit Rate Limiting
-	descriptions := fetchAllDescriptions(httpClient, ctx, response.Docs)
+	var (
+		res   []database.Book
+		wg    sync.WaitGroup
+		mutex sync.Mutex
+	)
+	for i, book := range response.Docs {
+		wg.Add(1)
+		go func(i int, book dtos.OpenLibraryBook) {
+			defer wg.Done()
 
-	// Transaction für alle Buch-Inserts
-	if err := middlewares.DB(ctx).Transaction(func(tx *gorm.DB) error {
-		for i, doc := range response.Docs {
-			isbn := ""
-			if len(doc.ISBN) > 0 {
-				isbn = doc.ISBN[0]
-			}
-
-			author := ""
-			if len(doc.AuthorName) > 0 {
-				author = doc.AuthorName[0]
-			}
-
-			coverURL := ""
-			if doc.CoverID > 0 {
-				coverURL = fmt.Sprintf("https://covers.openlibrary.org/b/id/%d-M.jpg", doc.CoverID)
-			}
-			if coverURL != "" {
-				cached, err := database.CacheMedia(coverURL)
-				if err != nil {
-					return err
-				}
-				cfg := middlewares.Config(ctx)
-				coverURL = fmt.Sprintf("%s://%s%s/v1/media/%d", cfg.ApiProtocol, cfg.ApiDomain, cfg.ApiBasePath, cached)
+			// hier holen wir die daten, seperat vom sperren
+			single, err := metadataSingle(httpClient, ctx, book)
+			if err != nil {
+				log := middlewares.Logger(ctx)
+				log.Err(err).Msg(fmt.Sprintf("worker %d returned an error", i))
+				// einfach "leise" abbrechen
+				return
 			}
 
-			description := descriptions[i]
-			if description == "" {
-				description = "Es gibt keine Beschreibung für dieses Buch."
-			}
+			// lsp kaputt?
+			lsp_workaround := dtos.Olibrary2book(single)
 
-			book := database.Book{
-				Title:       doc.Title,
-				Author:      author,
-				ISBN:        isbn,
-				ReleaseDate: uint64(doc.FirstYear),
-				Description: description,
-				CoverURL:    coverURL,
-			}
+			// hier ist die array-sperrlogik
+			mutex.Lock()
+			defer mutex.Unlock()
+			// das ist kein error
+			res = append(res, lsp_workaround)
 
-			// Für Bücher mit ISBN: ON CONFLICT DO NOTHING für idempotentes Verhalten (keine race condition)
-			// Für Bücher ohne ISBN: normales Create (jedes Buch wird eingefügt)
-			if isbn != "" {
-				if err := tx.Clauses(clause.OnConflict{
-					Columns:   []clause.Column{{Name: "isbn"}},
-					DoNothing: true,
-				}).Create(&book).Error; err != nil {
-					return fmt.Errorf("failed to save book to database: %w", err)
-				}
-			} else {
-				if err := tx.Create(&book).Error; err != nil {
-					return fmt.Errorf("failed to save book to database: %w", err)
-				}
-			}
-		}
-		return nil
-	}); err != nil {
+		}(i, book)
+	}
+
+	wg.Wait()
+
+	if err := insertNewBooks(ctx, res); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// fetchAllDescriptions holt alle Descriptions parallel mit Rate Limiting
-func fetchAllDescriptions(httpClient *resty.Client, ctx context.Context, docs []dtos.OpenLibraryBook) []string {
-	descriptions := make([]string, len(docs))
+func searchBooks(ctx context.Context, c *resty.Client, query string, limit string, author bool) (dtos.OpenLibraryResponse, error) {
 
-	var wg sync.WaitGroup
-	semaphore := make(chan struct{}, maxConcurrentRequests) // Rate limiting
+	var response dtos.OpenLibraryResponse
 
-	for i, doc := range docs {
-		wg.Add(1)
-		go func(index int, workKey string) {
-			defer wg.Done()
-
-			semaphore <- struct{}{}        // Acquire
-			defer func() { <-semaphore }() // Release
-
-			descriptions[index] = fetchWorkDetails(httpClient, ctx, workKey)
-		}(i, doc.Key)
+	_, err := c.R().
+		SetContext(ctx).
+		SetQueryParams(buildQuery(query, limit, author)).
+		SetResult(&response).
+		Get(openLibrarySearchURL)
+	if err != nil {
+		return dtos.OpenLibraryResponse{}, err
 	}
 
-	wg.Wait()
-	return descriptions
+	return response, nil
+
+}
+
+func insertNewBooks(ctx context.Context, books []database.Book) error {
+	// das hier ist immer noch xddd
+	err := middlewares.DB(ctx).Transaction(func(tx *gorm.DB) error {
+		for _, book := range books {
+			if book.ISBN != "" {
+				if err := tx.
+					Clauses(clause.OnConflict{Columns: []clause.Column{{Name: "isbn"}}, DoNothing: true}).
+					Create(&book).Error; err != nil {
+					return err
+				}
+
+			} else {
+				if err := tx.Create(&book).Error; err != nil {
+					return err
+				}
+
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func metadataSingle(client *resty.Client, ctx context.Context, book dtos.OpenLibraryBook) (dtos.OlibFullData, error) {
+	isbn, err := dtos.UnwrapFirst(book.ISBN)
+	if err != nil {
+		return dtos.OlibFullData{}, err
+	}
+
+	author, err := dtos.UnwrapFirst(book.AuthorName)
+	if err != nil {
+		return dtos.OlibFullData{}, err
+	}
+
+	desc := fetchWorkDetails(client, ctx, book.Key)
+
+	cacheId, err := database.CacheMedia(coverUrlfmt(book.CoverID))
+	if err != nil {
+		return dtos.OlibFullData{}, err
+	}
+	cachedURL := CacheKey2Url(ctx, cacheId)
+
+	return dtos.OlibFullData{
+		Title:       book.Title,
+		Author:      author,
+		ISBN:        isbn,
+		Year:        book.FirstYear,
+		CoverURL:    cachedURL,
+		Description: desc,
+	}, nil
+}
+
+func coverUrlfmt(id int) string {
+	return fmt.Sprintf("https://covers.openlibrary.org/b/id/%d-M.jpg", id)
+
 }
 
 // fetchWorkDetails ruft die Work-JSON von Open Library ab und extrahiert die Description
@@ -173,4 +188,28 @@ func extractDescription(desc any) string {
 	}
 
 	return ""
+}
+
+func buildQuery(query string, limit string, author bool) map[string]string {
+	urlfmt := strings.ReplaceAll(query, " ", "+")
+
+	if author {
+		return map[string]string{
+			"q":      "author:\"" + urlfmt + "\"",
+			"limit":  limit,
+			"fields": "isbn,title,author_name,cover_i,first_publish_year,key",
+		}
+	}
+
+	return map[string]string{
+		"q":      "title_suggest:\"" + urlfmt + "\"",
+		"limit":  limit,
+		"fields": "isbn,title,author_name,cover_i,first_publish_year,key",
+	}
+
+}
+
+func CacheKey2Url(ctx context.Context, id uint64) string {
+	cfg := middlewares.Config(ctx)
+	return fmt.Sprintf("%s://%s%s/v1/media/%d", cfg.ApiProtocol, cfg.ApiDomain, cfg.ApiBasePath, id)
 }
