@@ -13,8 +13,8 @@ RUN go mod download
 # Copy rest of the project
 COPY . .
 
-# Explicitly create out dir
-RUN mkdir -p /out
+# Explicitly create out dir and store directory
+RUN mkdir -p /out /out/store
 
 # Build Go API
 ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
@@ -33,6 +33,9 @@ WORKDIR /app
 
 # Copy binary from build stage
 COPY --from=builder /out/godocker /usr/local/bin/godocker
+
+# Create store directory for media files
+COPY --from=builder /out/store /app/store
 
 # Copy certificates for HTTPS/TLS
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt

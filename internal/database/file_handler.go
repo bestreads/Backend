@@ -7,10 +7,17 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"sync"
 )
+
+var storeInitOnce sync.Once
 
 // speichert die gegebene daten im filestore. gibt den hash (schlüssel) wieder zurück
 func FileStoreRaw(data []byte) (uint64, error) {
+	// Stelle sicher, dass der store-Ordner existiert
+	if err := ensureStoreDir(); err != nil {
+		return 0, fmt.Errorf("failed to create store directory: %w", err)
+	}
 
 	// ist das irgendwie nirgendswo dokumentiert?
 	// WIE BENUTZT MAN DIE APIs?
@@ -67,11 +74,27 @@ func FileRetrieveB64(hash string) (string, error) {
 
 }
 
-func prefix(name string) string {
+func getStorePath() string {
 	// :) importzyklus von middlewares
 	base := os.Getenv("DATA_PATH")
+	if base == "" {
+		base = "./store"
+	}
+	return base
+}
+
+func prefix(name string) string {
 	// eigentlich müsssen wir hier noch den pfad sanitizen
-	return fmt.Sprintf("%s/%s", base, name)
+	return fmt.Sprintf("%s/%s", getStorePath(), name)
+}
+
+// ensureStoreDir stellt sicher, dass der store-Ordner existiert
+func ensureStoreDir() error {
+	var err error
+	storeInitOnce.Do(func() {
+		err = os.MkdirAll(getStorePath(), 0755)
+	})
+	return err
 }
 
 // cached den link im dateisystem. gibt den hash (schlüssel) wieder zurück
