@@ -1,6 +1,10 @@
 package dtos
 
-import "github.com/bestreads/Backend/internal/database"
+import (
+	"time"
+
+	"github.com/bestreads/Backend/internal/database"
+)
 
 type PostResponse struct {
 	ProfilePicture string
@@ -8,4 +12,7 @@ type PostResponse struct {
 	Uid            uint
 	Book           database.Book
 	Content        string
+	CreatedAt      time.Time
+	State          database.ReadState
+	Rating         uint
 }
