@@ -11,55 +11,55 @@ import (
 )
 
 func GetPost(c *fiber.Ctx) error {
-	log := middlewares.Logger(c.UserContext())
-	log.Info().Msg("GET post")
+	ctx := c.UserContext()
+	log := middlewares.Logger(ctx)
 
-	limit := c.Query("limit")
-	if limit == "" {
-		limit = "-1"
+	// Get offset from optional query param
+	offset := c.Query("offset")
+	if offset == "" {
+		offset = "0"
 	}
 
+	// Get user id from optional query param
 	userId := c.Query("userId")
 	if userId == "" {
 		userId = "0"
 	}
 
-	nlimit, err := strconv.ParseInt(limit, 10, 32)
+	// Parse offset param
+	nOffset, err := strconv.ParseInt(offset, 10, 32)
 	if err != nil {
 		log.Error().Err(err).Msg("error parsing int")
 		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
-			Description: "bad limit",
+			Description: "Bad offset",
 		})
 
 	}
 
+	// Parse user id param
 	nUserId, err := strconv.ParseInt(userId, 10, 32)
 	if err != nil {
 		log.Error().Err(err).Msg("error parsing int")
-		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
-			Description: "bad userId",
-		})
+		return c.Status(fiber.StatusBadRequest).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: "Bad userId",
+			})
 
 	}
 
-	if nUserId == 0 {
-		// wir wollen posts von "allen" bekommen
-		posts, err := services.GetGlobalPosts(c.UserContext(), int(nlimit))
-		if err != nil {
-			log.Error().Err(err).Msg("error getting posts")
-			return returnInternalError(c)
-		}
-
-		return c.Status(fiber.StatusOK).JSON(posts)
-	}
-
-	posts, err := services.GetPost(c.UserContext(), uint(nUserId), int(nlimit))
+	// Get all posts (or all for the given user, if id != 0)
+	posts, err := services.GetPost(ctx, uint(nUserId), int(nOffset))
 	if err != nil {
-		log.Error().Err(err).Msg("error getting posts")
-		return returnInternalError(c)
+		msg := "Failed to get posts"
+		log.Error().Err(err).Msg(msg)
+		c.Status(fiber.StatusInternalServerError).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: msg,
+			})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(posts)
+	return c.Status(fiber.StatusOK).
+		JSON(posts)
 }
 
 func CreatePost(c *fiber.Ctx) error {

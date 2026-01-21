@@ -8,17 +8,8 @@ import (
 	"github.com/bestreads/Backend/internal/repositories"
 )
 
-func GetPost(c context.Context, uid uint, limit int) ([]dtos.PostResponse, error) {
-	posts, err := repositories.GetPost(c, uid, limit)
-	if err != nil {
-		return []dtos.PostResponse{}, err
-	}
-
-	return convert(posts)
-}
-
-func GetGlobalPosts(ctx context.Context, limit int) ([]dtos.PostResponse, error) {
-	posts, err := repositories.GetGlobalPosts(ctx, limit)
+func GetPost(c context.Context, userId uint, offset int) ([]dtos.PostResponse, error) {
+	posts, err := repositories.GetPosts(c, userId, offset)
 	if err != nil {
 		return []dtos.PostResponse{}, err
 	}
