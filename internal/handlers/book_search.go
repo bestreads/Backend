@@ -13,25 +13,25 @@ import (
 func BookSearch(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	log := middlewares.Logger(ctx)
+	cfg := middlewares.Config(ctx)
 	httpClient := middlewares.HttpClient(ctx)
 
-	limit := c.Query("limit")
-	if limit == "" {
-		log.Warn().Msg("Book search called without limit parameter")
-		return c.Status(fiber.StatusBadRequest).
-			JSON(dtos.GenericRestErrorResponse{
-				Description: "Query parameter 'limit' is required",
-			})
-	}
-	limitInt, err := strconv.Atoi(limit)
-	if err != nil || limitInt <= 0 {
-		log.Warn().Msg("Book search called with wrong limit")
-		return c.Status(fiber.StatusBadRequest).
-			JSON(dtos.GenericRestErrorResponse{
-				Description: "Query parameter 'limit' has to be a number > 0",
-			})
+	// Get offset from optional query param
+	offset := c.Query("offset")
+	if offset == "" {
+		offset = "0"
 	}
 
+	// Parse offset param
+	nOffset, err := strconv.ParseInt(offset, 10, 32)
+	if err != nil {
+		log.Error().Err(err).Msg("error parsing int")
+		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
+			Description: "Bad offset",
+		})
+	}
+
+	// Get query param
 	query := c.Query("q")
 	if query == "" {
 		log.Warn().Msg("Book search called without query parameter")
@@ -42,7 +42,6 @@ func BookSearch(c *fiber.Ctx) error {
 	}
 
 	var author bool
-
 	authorstr := c.Query("author")
 	if authorstr == "" {
 		author = false
@@ -50,10 +49,10 @@ func BookSearch(c *fiber.Ctx) error {
 		author = true
 	}
 
-	log.Info().Str("query", query).Str("limit", limit).Str("author", authorstr).Msg("Searching for books")
+	log.Debug().Str("query", query).Str("offset", offset).Str("author", authorstr).Msg("Searching for books")
 
 	// Search in the database
-	books, err := repositories.SearchBooks(ctx, query, limitInt, author)
+	books, err := repositories.SearchBooks(ctx, query, int(nOffset), author)
 	if err != nil {
 		log.Error().Err(err).Msg("Error searching in database")
 		return c.Status(fiber.StatusInternalServerError).
@@ -63,10 +62,11 @@ func BookSearch(c *fiber.Ctx) error {
 	}
 
 	// If fewer results than limit, search in Open Library and then re-query DB
-	if len(books) < limitInt {
-		log.Info().Int("localResults", len(books)).Int("limit", limitInt).Msg("Not enough local results, searching Open Library API")
-		err := services.SearchOpenLibrary(httpClient, ctx, query, limit, author)
-		if err != nil {
+	if len(books) < cfg.PaginationSteps {
+		log.Debug().Int("localResults", len(books)).Int("limit", cfg.PaginationSteps).Msg("Not enough local results, searching Open Library API")
+
+		// Re-query DB to get all books including newly added ones
+		if err := services.SearchOpenLibrary(httpClient, ctx, query, cfg.PaginationSteps, author); err != nil {
 			log.Error().Err(err).Msg("Error searching in Open Library")
 			return c.Status(fiber.StatusInternalServerError).
 				JSON(dtos.GenericRestErrorResponse{
@@ -74,8 +74,7 @@ func BookSearch(c *fiber.Ctx) error {
 				})
 		}
 
-		// Re-query DB to get all books including newly added ones
-		books, err = repositories.SearchBooks(ctx, query, limitInt, author)
+		books, err = repositories.SearchBooks(ctx, query, int(nOffset), author)
 		if err != nil {
 			log.Error().Err(err).Msg("Error searching in database after Open Library")
 			return c.Status(fiber.StatusInternalServerError).
@@ -85,7 +84,7 @@ func BookSearch(c *fiber.Ctx) error {
 		}
 	}
 
-	log.Info().Int("results", len(books)).Msg("Book search completed")
+	log.Debug().Int("results", len(books)).Msg("Book search completed")
 
 	return c.Status(fiber.StatusOK).
 		JSON(books)

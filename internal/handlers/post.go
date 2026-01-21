@@ -33,7 +33,6 @@ func GetPost(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
 			Description: "Bad offset",
 		})
-
 	}
 
 	// Parse user id param
