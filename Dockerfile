@@ -41,8 +41,6 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certifi
 COPY --from=builder /out/passwd /etc/passwd
 USER appuser
 
-RUN mkdir -p /app/store
-RUN chown appuser /app/store
 
 EXPOSE 8080
 
