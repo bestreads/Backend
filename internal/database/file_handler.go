@@ -68,8 +68,10 @@ func FileRetrieveB64(hash string) (string, error) {
 }
 
 func prefix(name string) string {
+	// :) importzyklus von middlewares
+	base := os.Getenv("DATA_PATH")
 	// eigentlich müsssen wir hier noch den pfad sanitizen
-	return fmt.Sprintf("./store/%s", name)
+	return fmt.Sprintf("%s/%s", base, name)
 }
 
 // cached den link im dateisystem. gibt den hash (schlüssel) wieder zurück
