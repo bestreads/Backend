@@ -43,14 +43,14 @@ func BookSearch(c *fiber.Ctx) error {
 
 	var author bool
 
-	authorstr := c.Query("q")
+	authorstr := c.Query("author")
 	if authorstr == "" {
 		author = false
 	} else {
 		author = true
 	}
 
-	log.Info().Str("query", query).Str("limit", limit).Msg("Searching for books")
+	log.Info().Str("query", query).Str("limit", limit).Str("author", authorstr).Msg("Searching for books")
 
 	// Search in the database
 	books, err := repositories.SearchBooks(ctx, query, limitInt, author)
