@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1-alpine AS builder
+FROM golang:1.26-rc-alpine3.23 AS builder
 
 WORKDIR /app
 
@@ -20,28 +20,29 @@ RUN mkdir -p /out
 ENV CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 RUN go build -trimpath -ldflags="-s -w" -o /out/godocker ./
 
-# Create non-root user
-RUN adduser -D -H -h /nonexistent -s /sbin/nologin -u 10001 appuser && \
-    grep appuser /etc/passwd > /out/passwd
-
 # ---
 
 # Production stage
-FROM scratch
+FROM busybox:1.37.0-musl
 
 WORKDIR /app
 
 # Copy binary from build stage
-COPY --from=builder /out/godocker /usr/local/bin/godocker
+COPY --from=builder /out/godocker /usr/local/bin/bestreads
 
 # Copy certificates for HTTPS/TLS
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
-# Copy non-root user
-COPY --from=builder /out/passwd /etc/passwd
+
+RUN addgroup -S appuser
+RUN adduser -G appuser -D -H -S -s /sbin/nologin appuser
+
+RUN mkdir /app/store
+RUN chown -R appuser:appuser /app
+
 USER appuser
 
 
 EXPOSE 8080
 
-ENTRYPOINT [ "/usr/local/bin/godocker" ]
+ENTRYPOINT [ "/usr/local/bin/bestreads" ]
