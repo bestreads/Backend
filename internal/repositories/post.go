@@ -6,6 +6,7 @@ import (
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/middlewares"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // wichtige informationen:
@@ -60,5 +61,22 @@ func enrichPostsWithLibrary(ctx context.Context, posts []database.Post) ([]datab
 }
 
 func CreateDbPost(ctx context.Context, post database.Post) error {
-	return gorm.G[database.Post](middlewares.DB(ctx)).Create(ctx, &post)
+	// wie macht man hier error handling lmao?
+	// https://gorm.io/docs/advanced_query.html#Using-Assign-with-FirstOrCreate
+	// middlewares.DB(ctx).
+	// 	Where("user_id = ? AND book_id = ?", post.UserID, post.BookID).
+	// 	Assign(&post).
+	// 	FirstOrCreate(&post)
+
+	// https://gorm.io/docs/create.html#Upsert-On-Conflict
+	// https://stackoverflow.com/questions/39333102/how-to-create-or-update-a-record-with-gorm
+	// https://stackoverflow.com/questions/70472417/sql-update-or-create-row
+	middlewares.DB(ctx).
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "user_id"}, {Name: "book_id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"content", "state", "rating"}),
+		}).
+		Create(&post)
+
+	return nil
 }
