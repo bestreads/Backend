@@ -40,7 +40,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certifi
 RUN addgroup -S appuser
 RUN adduser -G appuser -D -H -S -s /sbin/nologin appuser
 
-RUN mkdir /app/store
+RUN mkdir -p /app/store
 RUN chown -R appuser:appuser /app
 
 USER appuser
