@@ -53,7 +53,7 @@ func GetFile(c *fiber.Ctx) error {
 	}
 
 	// 400iq path sanitizing: doppeltes casting sichert den pfad bestimmt :3
-	data, err := database.FileRetrieve(strconv.Itoa(int(key)))
+	data, err := database.FileRetrieve(strconv.FormatUint(key, 10))
 	if err != nil {
 		log.Error().Err(err).Msg("file retrieve error")
 		return c.Status(fiber.StatusInternalServerError).JSON(dtos.GenericRestErrorResponse{
