@@ -51,7 +51,7 @@ func GetPost(c *fiber.Ctx) error {
 	if err != nil {
 		msg := "Failed to get posts"
 		log.Error().Err(err).Msg(msg)
-		c.Status(fiber.StatusInternalServerError).
+		return c.Status(fiber.StatusInternalServerError).
 			JSON(dtos.GenericRestErrorResponse{
 				Description: msg,
 			})
