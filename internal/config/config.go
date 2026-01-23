@@ -29,6 +29,7 @@ type Config struct {
 	RefreshTokenDurationDays   uint   `mapstructure:"REFRESH_TOKEN_DURATION_DAYS"`
 	TokenRefreshPath           string `mapstructure:"TOKEN_REFRESH_PATH"`
 	TokenSecureFlag            bool   `mapstructure:"TOKEN_SECURE_FLAG"`
+	PaginationSteps            int    `mapstructure:"PAGINATION_STEPS"`
 }
 
 func Load() *Config {
@@ -47,6 +48,7 @@ func Load() *Config {
 	viper.SetDefault("TOKEN_REFRESH_PATH", "/api/v1/auth/refresh")
 	viper.SetDefault("TOKEN_SECURE_FLAG", true)
 	viper.SetDefault("DEV_MODE", false)
+	viper.SetDefault("PAGINATION_STEPS", 25)
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")

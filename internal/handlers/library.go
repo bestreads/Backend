@@ -16,15 +16,17 @@ func GetLibrary(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	log := middlewares.Logger(ctx)
 
+	// Get user id from optional param or middleware
 	var userId uint
 	id := c.Query("userId")
 	if id != "" {
 		parsedId, err := strconv.Atoi(id)
 		if err != nil {
 			log.Error().Err(err).Msg("error parsing userId")
-			return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
-				Description: "Invalid userId",
-			})
+			return c.Status(fiber.StatusBadRequest).
+				JSON(dtos.GenericRestErrorResponse{
+					Description: "Invalid userId",
+				})
 		}
 		userId = uint(parsedId)
 	} else {
@@ -32,36 +34,43 @@ func GetLibrary(c *fiber.Ctx) error {
 		if err != nil {
 			msg := "Failed to get user id"
 			log.Error().Err(err).Msg(msg)
-			return c.Status(fiber.StatusInternalServerError).JSON(dtos.GenericRestErrorResponse{
-				Description: msg,
-			})
+			return c.Status(fiber.StatusInternalServerError).
+				JSON(dtos.GenericRestErrorResponse{
+					Description: msg,
+				})
 		}
 		userId = ownId
 	}
 
-	limit := c.Query("limit")
-	if limit == "" {
-		limit = "-1"
+	// Get offset from optional query param
+	offset := c.Query("offset")
+	if offset == "" {
+		offset = "0"
 	}
 
-	log.Debug().Msg(fmt.Sprintf("GET library for user %d with limit %s", userId, limit))
+	log.Debug().Msg(fmt.Sprintf("GET library for user %d with offset %s", userId, offset))
 
-	nlimit, err := strconv.ParseInt(limit, 10, 32)
+	// Parse offset param
+	nOffset, err := strconv.ParseInt(offset, 10, 32)
 	if err != nil {
-		log.Error().Err(err).Msg("error converting limit to int")
-		return c.Status(fiber.StatusInternalServerError).JSON(dtos.GenericRestErrorResponse{
-			Description: "Invalid limit",
-		})
+		log.Error().Err(err).Msg("error converting offset to int")
+		return c.Status(fiber.StatusInternalServerError).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: "Invalid offset",
+			})
 	}
 
-	result, err := services.QueryLibrary(c.UserContext(), uint(userId), nlimit)
+	// Get library of the given user
+	libraryEntries, err := services.QueryLibrary(ctx, uint(userId), int(nOffset))
 	if err != nil {
 		log.Error().Err(err).Msg("error getting user library")
-		return c.Status(fiber.StatusInternalServerError).JSON(dtos.GenericRestErrorResponse{
-			Description: "error getting user library",
-		})
+		return c.Status(fiber.StatusInternalServerError).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: "Failed to get user library",
+			})
 	}
-	return c.Status(fiber.StatusOK).JSON(result)
+	return c.Status(fiber.StatusOK).
+		JSON(libraryEntries)
 }
 
 func AddToLibrary(c *fiber.Ctx) error {

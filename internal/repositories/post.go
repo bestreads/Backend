@@ -14,32 +14,33 @@ import (
 //  2. gorm wird (sporadisch) andere sachen preloaden, keine ahnung wieso?
 //  3. eigentlich wollte ich eine api machen, mit der man nur die metadaten von einem user lädt.
 //     würde ein bisschen hübscher in json aussehen, das habe ich aber mal nicht gemacht
-func GetPost(ctx context.Context, uid uint, limit int) ([]database.Post, error) {
-	query := gorm.G[database.Post](middlewares.DB(ctx)).
+func GetPosts(ctx context.Context, userId uint, offset int) ([]database.Post, error) {
+	db := middlewares.DB(ctx)
+	cfg := middlewares.Config(ctx)
+
+	// Build query
+	query := gorm.G[database.Post](db).
 		Preload("User", nil).
 		Preload("Book", nil).
-		Where("user_id = ?", uid)
-	if limit > 0 {
-		query = query.Limit(limit)
-	}
-	posts, err := query.Find(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return enrichPostsWithLibrary(ctx, posts)
-}
+		Order("created_at ASC").
+		Limit(cfg.PaginationSteps)
 
-func GetGlobalPosts(ctx context.Context, limit int) ([]database.Post, error) {
-	query := gorm.G[database.Post](middlewares.DB(ctx)).
-		Preload("User", nil).
-		Preload("Book", nil)
-	if limit > 0 {
-		query = query.Limit(limit)
+	// Set offset when given
+	if offset != 0 {
+		query = query.Offset(offset)
 	}
+
+	// Filter for user id when given
+	if userId != 0 {
+		query = query.Where("user_id = ?", userId)
+	}
+
+	// Get entries
 	posts, err := query.Find(ctx)
 	if err != nil {
 		return nil, err
 	}
+
 	return enrichPostsWithLibrary(ctx, posts)
 }
 

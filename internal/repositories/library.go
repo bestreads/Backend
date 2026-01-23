@@ -19,12 +19,15 @@ func AddBook(ctx context.Context, uid uint, bid uint, state database.ReadState) 
 	return gorm.G[database.Library](middlewares.DB(ctx)).Create(ctx, &lib)
 }
 
-func QueryLibraryDb(ctx context.Context, uid uint, limit int64) ([]database.Library, error) {
-	// insane das hier random der user grepreloaded wird???
+func QueryLibraryDb(ctx context.Context, userId uint, offset int) ([]database.Library, error) {
+	cfg := middlewares.Config(ctx)
+
 	return gorm.G[database.Library](middlewares.DB(ctx)).
 		Preload("Book", nil).
-		Limit(int(limit)).
-		Where("user_id = ?", uid).
+		Offset(offset).
+		Limit(cfg.PaginationSteps).
+		Where("user_id = ?", userId).
+		Order("book_id ASC").
 		Find(ctx)
 }
 

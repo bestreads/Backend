@@ -8,7 +8,10 @@ import (
 	"github.com/bestreads/Backend/internal/middlewares"
 )
 
-func SearchBooks(ctx context.Context, query string, limit int, searchAuthor bool) ([]database.Book, error) {
+func SearchBooks(ctx context.Context, query string, offset int, searchAuthor bool) ([]database.Book, error) {
+	cfg := middlewares.Config(ctx)
+	db := middlewares.DB(ctx)
+
 	var books []database.Book
 
 	query = strings.TrimSpace(query)
@@ -18,19 +21,20 @@ func SearchBooks(ctx context.Context, query string, limit int, searchAuthor bool
 
 	pattern := "%" + strings.ToLower(query) + "%"
 
-	if searchAuthor {
-		err := middlewares.DB(ctx).
-			Where("LOWER(author) LIKE ?", pattern).
-			Limit(limit).
-			Find(&books).Error
-		return books, err
+	// Build db query
+	dbQuery := db.
+		Offset(offset).
+		Limit(cfg.PaginationSteps)
 
+	// Add relevant filter
+	if searchAuthor {
+		dbQuery = dbQuery.Where("LOWER(author) LIKE ?", pattern)
+	} else {
+		dbQuery = dbQuery.Where("LOWER(title) LIKE ?", pattern)
 	}
 
-	err := middlewares.DB(ctx).
-		Where("LOWER(title) LIKE ?", pattern).
-		Limit(limit).
-		Find(&books).Error
+	// Query books
+	bookQueryErr := dbQuery.Find(&books).Error
 
-	return books, err
+	return books, bookQueryErr
 }

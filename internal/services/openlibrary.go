@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -20,7 +21,7 @@ const maxConcurrentRequests = 7                                    // Rate limit
 
 // SearchOpenLibrary führt eine OpenLibrary-Suche aus, lädt parallel zugehörige Work-Descriptions
 // und speichert die gefundenen Bücher inklusive Beschreibung und Cover-URL in der Datenbank.
-func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query string, limit string, searchAuthors bool) error {
+func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query string, limit int, searchAuthors bool) error {
 	response, err := searchBooks(ctx, httpClient, query, limit, searchAuthors)
 	if err != nil {
 		return err
@@ -66,13 +67,13 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 	return nil
 }
 
-func searchBooks(ctx context.Context, c *resty.Client, query string, limit string, author bool) (dtos.OpenLibraryResponse, error) {
+func searchBooks(ctx context.Context, c *resty.Client, query string, limit int, author bool) (dtos.OpenLibraryResponse, error) {
 
 	var response dtos.OpenLibraryResponse
 
 	_, err := c.R().
 		SetContext(ctx).
-		SetQueryParams(buildQuery(query, limit, author)).
+		SetQueryParams(buildQuery(query, strconv.Itoa(limit), author)).
 		SetResult(&response).
 		Get(openLibrarySearchURL)
 	if err != nil {
