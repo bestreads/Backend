@@ -71,12 +71,11 @@ func CreateDbPost(ctx context.Context, post database.Post) error {
 	// https://gorm.io/docs/create.html#Upsert-On-Conflict
 	// https://stackoverflow.com/questions/39333102/how-to-create-or-update-a-record-with-gorm
 	// https://stackoverflow.com/questions/70472417/sql-update-or-create-row
-	middlewares.DB(ctx).
-		Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "user_id"}, {Name: "book_id"}},
-			DoUpdates: clause.AssignmentColumns([]string{"content", "state", "rating"}),
-		}).
-		Create(&post)
 
-	return nil
+	err := middlewares.DB(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "book_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"content"}),
+	}).Create(&post)
+
+	return err.Error
 }
