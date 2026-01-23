@@ -6,6 +6,7 @@ import (
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/middlewares"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // wichtige informationen:
@@ -60,5 +61,10 @@ func enrichPostsWithLibrary(ctx context.Context, posts []database.Post) ([]datab
 }
 
 func CreateDbPost(ctx context.Context, post database.Post) error {
-	return gorm.G[database.Post](middlewares.DB(ctx)).Create(ctx, &post)
+	err := middlewares.DB(ctx).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "book_id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"content"}),
+	}).Create(&post)
+
+	return err.Error
 }
