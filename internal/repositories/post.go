@@ -22,7 +22,7 @@ func GetPosts(ctx context.Context, userId uint, offset int) ([]database.Post, er
 	query := gorm.G[database.Post](db).
 		Preload("User", nil).
 		Preload("Book", nil).
-		Order("created_at ASC").
+		Order("created_at DESC").
 		Limit(cfg.PaginationSteps)
 
 	// Set offset when given
