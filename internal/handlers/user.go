@@ -176,3 +176,71 @@ func ChangeUserData(c *fiber.Ctx) error {
 
 	return c.SendStatus(fiber.StatusOK)
 }
+
+func ResetUserPassword(c *fiber.Ctx) error {
+	ctx := c.UserContext()
+	log := middlewares.Logger(ctx)
+	validate := middlewares.Validator(ctx)
+
+	var payload dtos.ResetPasswordRequest
+	if err := c.BodyParser(&payload); err != nil {
+		log.Warn().Err(err).Msg("failed to parse request body")
+		return c.Status(fiber.StatusBadRequest).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: "Invalid request body",
+			})
+	}
+
+	// Validate request
+	if validationErr := validate.Struct(&payload); validationErr != nil {
+		var valErrs validator.ValidationErrors
+		if errors.As(validationErr, &valErrs) {
+			for _, e := range valErrs {
+				if e.Field() == "Email" && e.Tag() == "email" {
+					return c.Status(fiber.StatusBadRequest).
+						JSON(dtos.GenericRestErrorResponse{
+							Description: "Invalid email format",
+						})
+				}
+
+				if e.Field() == "NewPassword" && e.Tag() == "min" {
+					return c.Status(fiber.StatusBadRequest).
+						JSON(dtos.GenericRestErrorResponse{
+							Description: "Password must be at least 12 characters long",
+						})
+				}
+
+				if e.Field() == "SecurityAnswer" && e.Tag() == "required" {
+					return c.Status(fiber.StatusBadRequest).
+						JSON(dtos.GenericRestErrorResponse{
+							Description: "Security answer is required",
+						})
+				}
+			}
+		}
+
+		// Fallback
+		log.Warn().Err(validationErr).Msg("validation failed")
+		return c.Status(fiber.StatusBadRequest).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: "Validation failed",
+			})
+	}
+
+	// Call service to reset password
+	if err := services.ResetPassword(ctx, payload); err != nil {
+		log.Warn().Err(err).Str("email", payload.Email).Msg("password reset failed")
+		if errors.Is(err, services.ErrInvalidSecurityAnswer) {
+			return c.Status(fiber.StatusUnauthorized).
+				JSON(dtos.GenericRestErrorResponse{
+					Description: "Invalid email or security answer",
+				})
+		}
+		return c.Status(fiber.StatusInternalServerError).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: "Failed to reset password",
+			})
+	}
+
+	return c.SendStatus(fiber.StatusOK)
+}
