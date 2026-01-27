@@ -9,12 +9,14 @@ info:
 servers:
   - url: http://localhost:8080/api/v1
     description: Development server
-  - url: https://api.bestreads.com/api/v1
+  - url: https://bestreads.byte-flow.de/api/v1/
     description: Production server
 
 tags:
   - name: Books
     description: Book search and management operations
+  - name: User
+    description: User management operations
   - name: Health
     description: System health check
 
@@ -101,6 +103,47 @@ paths:
                   value:
                     error: "Error searching in Open Library: timeout"
 
+  /user/reset-password:
+    post:
+      summary: Reset user password
+      description: Reset password for a user with email verification and security answer
+      operationId: resetPassword
+      tags:
+        - User
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+            example:
+              email: "user@example.com"
+              securityAnswer: "answer"
+              newPassword: "NewSecurePassword123"
+      responses:
+        '200':
+          description: Password reset successfully
+        '400':
+          description: Bad request - invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - invalid email or security answer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /health:
     get:
       summary: Health check
@@ -178,3 +221,27 @@ components:
           type: string
           description: Error message describing what went wrong
           example: "Query parameter 'q' is required"
+
+    ResetPasswordRequest:
+      type: object
+      description: Request payload for resetting a user password
+      required:
+        - email
+        - securityAnswer
+        - newPassword
+      properties:
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: "user@example.com"
+        securityAnswer:
+          type: string
+          description: Answer to the security question
+          example: "answer"
+        newPassword:
+          type: string
+          format: password
+          description: New password (minimum 12 characters)
+          minLength: 12
+          example: "NewSecurePassword123"
