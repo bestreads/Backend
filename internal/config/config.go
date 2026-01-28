@@ -12,6 +12,7 @@ type Config struct {
 	ApiProtocol                string `mapstructure:"API_PROTOCOL"`
 	ApiDomain                  string `mapstructure:"API_DOMAIN"`
 	ApiPort                    string `mapstructure:"API_PORT"`
+	ApiProdPort                string `mapstructure:"API_PROD_PORT"`
 	ApiBasePath                string `mapstructure:"API_BASE_PATH"`
 	DebugLevel                 string `mapstructure:"DEBUG_LEVEL"`
 	DBHost                     string `mapstructure:"DB_HOST"`
@@ -37,6 +38,7 @@ func Load() *Config {
 	viper.SetDefault("API_PROTOCOL", "http")
 	viper.SetDefault("API_DOMAIN", "localhost")
 	viper.SetDefault("API_PORT", "3000")
+	viper.SetDefault("API_PROD_PORT", "443")
 	viper.SetDefault("API_BASE_PATH", "/api")
 	viper.SetDefault("DEBUG_LEVEL", "info")
 	viper.SetDefault("DB_HOST", "localhost")

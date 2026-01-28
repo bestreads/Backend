@@ -10,10 +10,30 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	_ "github.com/gofiber/swagger/v2" // swagger handler
 	"github.com/rs/zerolog"
 	"resty.dev/v3"
 )
 
+// @title           Best Reads API
+// @version         1.0
+// @description     API for searching and managing books
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email  support@swagger.io
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+
+// @host      localhost:8080
+// @BasePath  /api/v1
+
+// @securityDefinitions.basic  BasicAuth
+
+// @externalDocs.description  OpenAPI
+// @externalDocs.url          https://swagger.io/resources/open-api/
 func Start(cfg *config.Config, logger zerolog.Logger) {
 	app := fiber.New()
 

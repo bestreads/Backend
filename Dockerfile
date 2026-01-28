@@ -13,6 +13,10 @@ RUN go mod download
 # Copy rest of the project
 COPY . .
 
+# Install swag and generate/update docs
+RUN go install github.com/swaggo/swag/cmd/swag@latest
+RUN swag init
+
 # Explicitly create out dir and store directory with correct ownership
 RUN mkdir -p /out /out/store && chown 10001:10001 /out/store
 
@@ -29,6 +33,9 @@ WORKDIR /app
 
 # Copy binary from build stage
 COPY --from=builder /out/godocker /usr/local/bin/bestreads
+
+# Copy Swagger docs from build stage
+COPY --from=builder /app/docs /app/docs
 
 # Create store directory for media files (owned by appuser)
 COPY --from=builder --chown=10001:10001 /out/store /app/store
