@@ -8,6 +8,18 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// TokenRefresh generates an access token for the user.
+// @Summary TokenRefresh generates an access token for the user.
+// @Description Uses the refresh token to generate a new access-JWT for the user, if the refresh token is still valid.
+// @Tags User Management
+// @Accept json
+// @Produce json
+// @Param Cookie header string false "refreshToken=<jwt-token>"
+// @Success 200 {object} dtos.GenericRestResponse "Token refresh successful"
+// @Failure 400 {object} dtos.GenericRestErrorResponse "Invalid request (-body)"
+// @Failure 401 {object} dtos.GenericRestErrorResponse "Invalid refresh-JWT"
+// @Failure 500 {object} dtos.GenericRestErrorResponse "Internal server error"
+// @Router /v1/auth/refresh [post]
 func TokenRefresh(c *fiber.Ctx) error {
 	user := middlewares.User(c)
 	ctx := c.UserContext()
