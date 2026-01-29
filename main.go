@@ -8,6 +8,25 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// @title						Best Reads API
+// @version						1.0
+// @description					API for searching and managing books
+// @termsOfService				https://github.com/bestreads/Backend/blob/main/LICENSE
+
+// @contact.name				Best Reads Team
+// @contact.url					https://github.com/bestreads/Backend/issues
+
+// @license.name				The Unlicense
+// @license.url					https://github.com/bestreads/Backend/blob/main/LICENSE
+
+// @BasePath					/api
+// @schemes						http https
+
+// @securityDefinitions.apikey	BearerAuth
+// @name						Authorization
+// @in							header
+// @description					Bearer token-based authentication. Use "Bearer {your-token}"
+
 var (
 	cfg    *config.Config
 	logger zerolog.Logger

@@ -13,6 +13,18 @@ import (
 	"gorm.io/gorm"
 )
 
+// Login handles the user login process.
+// @Summary Login to an existing user account
+// @Description Logs the user into the system with the provided credentials and returns a refresh-JWT and an access-JWT.
+// @Tags User Management
+// @Accept json
+// @Produce json
+// @Param User body dtos.LoginRequest true "The user's email address and password."
+// @Success 200 {object} dtos.GenericRestResponse "Login successful"
+// @Failure 400 {object} dtos.GenericRestErrorResponse "Invalid request (-body)"
+// @Failure 401 {object} dtos.GenericRestErrorResponse "Wrong credentials"
+// @Failure 500 {object} dtos.GenericRestErrorResponse "Internal server error"
+// @Router /v1/auth/login [post]
 func Login(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	log := middlewares.Logger(ctx)

@@ -7,6 +7,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// Logout handles the user logout process.
+// @Summary Logout of a user account
+// @Description Logs the user out by invalidating cookies from the client’s browser.
+// @Tags User Management
+// @Produce json
+// @Success 200 {object} dtos.GenericRestResponse "Logout successful"
+// @Router /v1/auth/logout [post]
 func Logout(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 

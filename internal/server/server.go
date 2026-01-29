@@ -10,6 +10,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	_ "github.com/gofiber/swagger/v2" // swagger handler
 	"github.com/rs/zerolog"
 	"resty.dev/v3"
 )

@@ -1,4 +1,4 @@
-COMPOSE_CMD = podman compose -f compose.local.yaml
+COMPOSE_CMD = docker compose -f compose.local.yaml
 
 local: local-clean local-start
 
