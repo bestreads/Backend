@@ -48,3 +48,9 @@ func CreatePost(c context.Context, id uint, bid uint, content string) error {
 	return repositories.CreateDbPost(c, post)
 
 }
+
+func DeletePost(ctx context.Context, uid uint, bid uint) error {
+	// idk vllt hiermit noch was machen
+	_, err := repositories.DeleteDbPost(ctx, uid, bid)
+	return err
+}

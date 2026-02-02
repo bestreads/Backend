@@ -112,6 +112,50 @@ func CreatePost(c *fiber.Ctx) error {
 	return c.SendStatus(fiber.StatusOK)
 }
 
+func DeletePost(c *fiber.Ctx) error {
+	ctx := c.UserContext()
+	log := middlewares.Logger(ctx)
+	userId, err := middlewares.User(c).GetId()
+	if err != nil {
+		msg := "Failed to get user id"
+		log.Error().Err(err).Msg(msg)
+		return c.Status(fiber.StatusInternalServerError).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: msg,
+			})
+	}
+
+	// Get bid from optional query param
+	bid := c.Query("bid")
+	if bid == "" {
+		log.Warn().Msg("will not delete post for book")
+		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
+			Description: "cannot delete post for empty book",
+		})
+	}
+	nbid, err := strconv.ParseUint(bid, 10, 32)
+	if err != nil {
+		log.Error().Err(err).Msg("error parsing int")
+		return c.Status(fiber.StatusBadRequest).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: "Bad userId",
+			})
+
+	}
+
+	if err := services.DeleteFromLibrary(c.UserContext(), userId, uint(nbid)); err != nil {
+		log.Error().Err(err).Msg("could not delete post")
+		return c.Status(fiber.StatusInternalServerError).
+			JSON(dtos.GenericRestErrorResponse{
+				Description: "error deleting post",
+			})
+
+	}
+
+	return nil
+
+}
+
 func returnInternalError(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusInternalServerError).JSON(
 		dtos.GenericRestErrorResponse{
