@@ -21,12 +21,12 @@ func GetBookFromDB(ctx context.Context, log zerolog.Logger, bid uint64) (databas
 	return book, nil
 }
 
-func UpdateBookAvgRating(ctx context.Context, bookId uint, avgRating float32) error {
+func UpdateBookAvgRating(ctx context.Context, bookId uint, avgRating float32, count uint) error {
 	db := middlewares.DB(ctx)
 
 	_, updateBookAvgRatingErr := gorm.G[database.Book](db).
 		Where("id = ?", bookId).
-		Update(ctx, "rating_avg", avgRating)
+		Updates(ctx, database.Book{RatingAvg: avgRating, RatingCount: count})
 
 	return updateBookAvgRatingErr
 }

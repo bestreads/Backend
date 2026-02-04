@@ -9,6 +9,7 @@ type Book struct {
 	Author      string
 	CoverURL    string
 	RatingAvg   float32
+	RatingCount uint
 	Description string
 	ReleaseDate uint64 // am besten unix epoch oder so, erfordert keine speziellen datentypen
 	Genre       string
