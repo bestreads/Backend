@@ -16,7 +16,7 @@ func RecalculateRatingAvg(ctx context.Context, bookId uint) error {
 
 	// Calculate rating avg
 	var ratingsSum uint
-	var ratedCount int
+	var ratedCount uint
 	for _, library := range libraries {
 		if library.Rating > 0 {
 			ratingsSum += library.Rating
@@ -29,7 +29,7 @@ func RecalculateRatingAvg(ctx context.Context, bookId uint) error {
 	}
 
 	// Update rating avg for the given book
-	if err := repositories.UpdateBookAvgRating(ctx, bookId, avgRating); err != nil {
+	if err := repositories.UpdateBookAvgRating(ctx, bookId, avgRating, ratedCount); err != nil {
 		return err
 	}
 

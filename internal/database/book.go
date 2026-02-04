@@ -8,8 +8,13 @@ type Book struct {
 	Title       string
 	Author      string
 	CoverURL    string
-	RatingAvg   float32
+	Rating      Rating `gorm:"embedded"`
 	Description string
 	ReleaseDate uint64 // am besten unix epoch oder so, erfordert keine speziellen datentypen
 	Genre       string
+}
+
+type Rating struct {
+	Avg   float32
+	Count uint
 }
