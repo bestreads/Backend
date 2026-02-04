@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/bestreads/Backend/internal/config"
 	"github.com/bestreads/Backend/internal/handlers"
@@ -25,15 +26,19 @@ func setRoutes(cfg *config.Config, log zerolog.Logger, app *fiber.App) {
 	swaggerFileName := "docs.yaml"
 	swaggerGroup := v1.Group(swaggerGroupName)
 
-	// Swagger document provider
+	// Swagger document provider - check Docker path first, then relative (local dev)
+	swaggerFilePath := "./docs/swagger.yaml"
+	if _, err := os.Stat("/app/docs/swagger.yaml"); err == nil {
+		swaggerFilePath = "/app/docs/swagger.yaml"
+	}
 	swaggerGroup.Get(fmt.Sprintf("/%s", swaggerFileName), func(c *fiber.Ctx) error {
-		return c.SendFile("./docs/swagger.yaml")
+		return c.SendFile(swaggerFilePath)
 	})
 
 	// Swagger UI provider
 	swaggerGroup.Get("/docs/*", swagger.New(
 		swagger.Config{ // Custom url/path for file provider:
-			URL: fmt.Sprintf("%s://%s:%s%s/v1%s/%s",
+			URL: fmt.Sprintf("%s%s:%s%s/v1%s/%s",
 				cfg.ApiProtocol, cfg.ApiDomain, cfg.ApiProdPort, cfg.ApiBasePath, swaggerGroupName, swaggerFileName),
 		}))
 
