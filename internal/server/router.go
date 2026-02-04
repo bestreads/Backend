@@ -81,7 +81,7 @@ func setRoutes(cfg *config.Config, log zerolog.Logger, app *fiber.App) {
 	// ?limit=n
 	v1Protected.Get("/post", handlers.GetPost)
 	v1Protected.Post("/post", handlers.CreatePost)
-	v1Protected.Put("/post", handlers.CreatePost)
+	v1Protected.Delete("/post", handlers.DeletePost)
 
 	v1mediaProtected := v1Protected.Group("/media")
 	// ?type=0|1|2
