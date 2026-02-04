@@ -152,7 +152,7 @@ func DeletePost(c *fiber.Ctx) error {
 
 	}
 
-	return nil
+	return c.Status(fiber.StatusOK).JSON(dtos.GenericRestResponse{Message: "ok"})
 
 }
 
