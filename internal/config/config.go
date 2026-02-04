@@ -35,7 +35,7 @@ type Config struct {
 
 func Load() *Config {
 	// Defaults
-	viper.SetDefault("API_PROTOCOL", "http")
+	viper.SetDefault("API_PROTOCOL", "http://")
 	viper.SetDefault("API_DOMAIN", "localhost")
 	viper.SetDefault("API_PORT", "3000")
 	viper.SetDefault("API_PROD_PORT", "443")
