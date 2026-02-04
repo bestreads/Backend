@@ -143,7 +143,7 @@ func DeletePost(c *fiber.Ctx) error {
 
 	}
 
-	if err := services.DeleteFromLibrary(c.UserContext(), userId, uint(nbid)); err != nil {
+	if err := services.DeletePost(c.UserContext(), userId, uint(nbid)); err != nil {
 		log.Error().Err(err).Msg("could not delete post")
 		return c.Status(fiber.StatusInternalServerError).
 			JSON(dtos.GenericRestErrorResponse{
