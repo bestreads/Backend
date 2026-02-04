@@ -26,7 +26,7 @@ func UpdateBookAvgRating(ctx context.Context, bookId uint, avgRating float32, co
 
 	_, updateBookAvgRatingErr := gorm.G[database.Book](db).
 		Where("id = ?", bookId).
-		Updates(ctx, database.Book{RatingAvg: avgRating, RatingCount: count})
+		Updates(ctx, database.Book{Rating: database.Rating{Avg: avgRating, Count: count}})
 
 	return updateBookAvgRatingErr
 }
