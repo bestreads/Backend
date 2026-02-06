@@ -71,7 +71,10 @@ func CreateDbPost(ctx context.Context, post database.Post) error {
 }
 
 func DeleteDbPost(ctx context.Context, uid uint, bid uint) (int, error) {
-	return gorm.G[database.Post](middlewares.DB(ctx)).
+	result := middlewares.DB(ctx).
+		Unscoped().
 		Where("user_id = ? AND book_id = ?", uid, bid).
-		Delete(ctx)
+		Delete(&database.Post{})
+	
+	return int(result.RowsAffected), result.Error
 }
