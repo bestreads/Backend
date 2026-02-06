@@ -38,7 +38,7 @@ func setRoutes(cfg *config.Config, log zerolog.Logger, app *fiber.App) {
 	// Swagger UI provider
 	swaggerGroup.Get("/docs/*", swagger.New(
 		swagger.Config{ // Custom url/path for file provider:
-			URL: fmt.Sprintf("%s%s:%s%s/v1%s/%s",
+			URL: fmt.Sprintf("%s://%s:%s%s/v1%s/%s",
 				cfg.ApiProtocol, cfg.ApiDomain, cfg.ApiProdPort, cfg.ApiBasePath, swaggerGroupName, swaggerFileName),
 		}))
 
