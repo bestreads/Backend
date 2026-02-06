@@ -6,7 +6,6 @@ import (
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/repositories"
-	"gorm.io/gorm"
 )
 
 func GetPost(c context.Context, userId uint, offset int) ([]dtos.PostResponse, error) {
@@ -41,10 +40,9 @@ func convert(p []database.Post) ([]dtos.PostResponse, error) {
 func CreatePost(c context.Context, id uint, bid uint, content string) error {
 	// leeres bild wird einfach "0", das ist okay glaube ich
 	post := database.Post{
-		UserID:    id,
-		BookID:    bid,
-		Content:   content,
-		DeletedAt: gorm.DeletedAt{}, // das deletedAt feld explizit zurücksetzen
+		UserID:  id,
+		BookID:  bid,
+		Content: content,
 	}
 
 	return repositories.CreateDbPost(c, post)
