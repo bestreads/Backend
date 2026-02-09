@@ -31,6 +31,7 @@ type Config struct {
 	TokenRefreshPath           string `mapstructure:"TOKEN_REFRESH_PATH"`
 	TokenSecureFlag            bool   `mapstructure:"TOKEN_SECURE_FLAG"`
 	PaginationSteps            int    `mapstructure:"PAGINATION_STEPS"`
+	OpenLibraryRequestEmail    string `mapstructure:"OPEN_LIBRARY_REQUEST_EMAIL"`
 }
 
 func Load() *Config {
