@@ -14,7 +14,6 @@ func BookSearch(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	log := middlewares.Logger(ctx)
 	cfg := middlewares.Config(ctx)
-	httpClient := middlewares.HttpClient(ctx)
 
 	// Get offset from optional query param
 	offset := c.Query("offset")
@@ -66,7 +65,7 @@ func BookSearch(c *fiber.Ctx) error {
 		log.Debug().Int("localResults", len(books)).Int("limit", cfg.PaginationSteps).Msg("Not enough local results, searching Open Library API")
 
 		// Re-query DB to get all books including newly added ones
-		if err := services.SearchOpenLibrary(httpClient, ctx, query, cfg.PaginationSteps, author); err != nil {
+		if err := services.SearchOpenLibrary(ctx, query, cfg.PaginationSteps, author); err != nil {
 			log.Error().Err(err).Msg("Error searching in Open Library")
 			return c.Status(fiber.StatusInternalServerError).
 				JSON(dtos.GenericRestErrorResponse{
