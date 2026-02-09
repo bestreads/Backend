@@ -17,7 +17,6 @@ import (
 
 const openLibrarySearchURL = "https://openlibrary.org/search.json" // Open Library Search-Endpoint
 const openLibraryBaseURL = "https://openlibrary.org"               // Basis-URL für Work-Details und Beschreibungen
-const maxConcurrentRequests = 7                                    // Rate limiting: maximal 7 gleichzeitige Requests
 
 // SearchOpenLibrary führt eine OpenLibrary-Suche aus, lädt parallel zugehörige Work-Descriptions
 // und speichert die gefundenen Bücher inklusive Beschreibung und Cover-URL in der Datenbank.
