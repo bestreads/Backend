@@ -22,7 +22,7 @@ const maxConcurrentRequests = 7                                    // Rate limit
 // SearchOpenLibrary führt eine OpenLibrary-Suche aus, lädt parallel zugehörige Work-Descriptions
 // und speichert die gefundenen Bücher inklusive Beschreibung und Cover-URL in der Datenbank.
 func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query string, limit int, searchAuthors bool) error {
-	response, err := searchBooks(ctx, httpClient, query, limit, searchAuthors)
+	response, err := searchBooks(ctx, query, limit, searchAuthors)
 	if err != nil {
 		return err
 	}
@@ -67,13 +67,16 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 	return nil
 }
 
-func searchBooks(ctx context.Context, c *resty.Client, query string, limit int, author bool) (dtos.OpenLibraryResponse, error) {
+func searchBooks(ctx context.Context, query string, limit int, author bool) (dtos.OpenLibraryResponse, error) {
+	httpClient := middlewares.HttpClient(ctx)
+	cfg := middlewares.Config(ctx)
 
 	var response dtos.OpenLibraryResponse
 
-	_, err := c.R().
+	_, err := httpClient.R().
 		SetContext(ctx).
 		SetQueryParams(buildQuery(query, strconv.Itoa(limit), author)).
+		SetHeader("User-Agent", fmt.Sprintf("BestReads/1.0 (%s)", cfg.OpenLibraryRequestEmail)).
 		SetResult(&response).
 		Get(openLibrarySearchURL)
 	if err != nil {
@@ -123,7 +126,7 @@ func metadataSingle(client *resty.Client, ctx context.Context, book dtos.OpenLib
 		return dtos.OlibFullData{}, err
 	}
 
-	desc := fetchWorkDetails(client, ctx, book.Key)
+	desc := fetchWorkDetails(ctx, book.Key)
 
 	cacheId, err := database.CacheMedia(coverUrlfmt(book.CoverID))
 	if err != nil {
@@ -147,7 +150,10 @@ func coverUrlfmt(id int) string {
 }
 
 // fetchWorkDetails ruft die Work-JSON von Open Library ab und extrahiert die Description
-func fetchWorkDetails(httpClient *resty.Client, ctx context.Context, workKey string) string {
+func fetchWorkDetails(ctx context.Context, workKey string) string {
+	httpClient := middlewares.HttpClient(ctx)
+	cfg := middlewares.Config(ctx)
+
 	if workKey == "" {
 		return "Es gibt keine Beschreibung für dieses Buch."
 	}
@@ -158,6 +164,7 @@ func fetchWorkDetails(httpClient *resty.Client, ctx context.Context, workKey str
 
 	_, err := httpClient.R().
 		SetContext(ctx).
+		SetHeader("User-Agent", fmt.Sprintf("BestReads/1.0 (%s)", cfg.OpenLibraryRequestEmail)).
 		SetResult(&workResponse).
 		Get(url)
 
