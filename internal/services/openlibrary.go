@@ -12,7 +12,6 @@ import (
 	"github.com/bestreads/Backend/internal/middlewares"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"resty.dev/v3"
 )
 
 const openLibrarySearchURL = "https://openlibrary.org/search.json" // Open Library Search-Endpoint
@@ -20,7 +19,7 @@ const openLibraryBaseURL = "https://openlibrary.org"               // Basis-URL 
 
 // SearchOpenLibrary führt eine OpenLibrary-Suche aus, lädt parallel zugehörige Work-Descriptions
 // und speichert die gefundenen Bücher inklusive Beschreibung und Cover-URL in der Datenbank.
-func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query string, limit int, searchAuthors bool) error {
+func SearchOpenLibrary(ctx context.Context, query string, limit int, searchAuthors bool) error {
 	response, err := searchBooks(ctx, query, limit, searchAuthors)
 	if err != nil {
 		return err
@@ -37,7 +36,7 @@ func SearchOpenLibrary(httpClient *resty.Client, ctx context.Context, query stri
 			defer wg.Done()
 
 			// hier holen wir die daten, seperat vom sperren
-			single, err := metadataSingle(httpClient, ctx, book)
+			single, err := metadataSingle(ctx, book)
 			if err != nil {
 				log := middlewares.Logger(ctx)
 				log.Err(err).Msg(fmt.Sprintf("worker %d returned an error", i))
@@ -114,7 +113,7 @@ func insertNewBooks(ctx context.Context, books []database.Book) error {
 	return nil
 }
 
-func metadataSingle(client *resty.Client, ctx context.Context, book dtos.OpenLibraryBook) (dtos.OlibFullData, error) {
+func metadataSingle(ctx context.Context, book dtos.OpenLibraryBook) (dtos.OlibFullData, error) {
 	isbn, err := dtos.UnwrapFirst(book.ISBN)
 	if err != nil {
 		return dtos.OlibFullData{}, err
