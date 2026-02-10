@@ -22,7 +22,7 @@ func GetPosts(ctx context.Context, userId uint, offset int) ([]database.Post, er
 	query := gorm.G[database.Post](db).
 		Preload("User", nil).
 		Preload("Book", nil).
-		Order("created_at DESC").
+		Order("updated_at DESC").
 		Limit(cfg.PaginationSteps)
 
 	// Set offset when given
@@ -75,6 +75,6 @@ func DeleteDbPost(ctx context.Context, uid uint, bid uint) (int, error) {
 		Unscoped().
 		Where("user_id = ? AND book_id = ?", uid, bid).
 		Delete(&database.Post{})
-	
+
 	return int(result.RowsAffected), result.Error
 }
