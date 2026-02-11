@@ -61,7 +61,7 @@ func followInner(c *fiber.Ctx, unfollow bool) error {
 		})
 	}
 
-	other_id, err := getIdParam(c)
+	other_id, err := getIdQuery(c)
 	if err != nil {
 		log.Err(err).Msg("error parsing target id")
 		return c.Status(fiber.StatusBadRequest).JSON(dtos.GenericRestErrorResponse{
@@ -83,8 +83,8 @@ func followInner(c *fiber.Ctx, unfollow bool) error {
 
 }
 
-func getIdParam(c *fiber.Ctx) (uint, error) {
-	id_str := c.Params("id")
+func getIdQuery(c *fiber.Ctx) (uint, error) {
+	id_str := c.Query("id")
 	if id_str == "" {
 		return 0, errors.New("id is empty")
 	}
