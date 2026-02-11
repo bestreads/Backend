@@ -31,6 +31,10 @@ class Co:
     CROSSED = "\033[9m"
     END = "\033[0m"
 
+#############
+#   setup   # 
+#############
+
 HOST = "localhost:3000"
 API_PATH = "/api/v1"
 
@@ -38,9 +42,15 @@ API_PATH = "/api/v1"
 USERNAME = "test3@test.arpa"
 PASSWORD = "test1234567890"
 
-# follow-test
+# follow-tests
 FOLLOW_ID = 10
 GET_FOLLOW_TARGET = 10
+
+
+#############
+#   tests   # 
+#############
+
 
 def healtcheck():
     resp = requests.get(url=f"http://{HOST}{API_PATH}/health")
@@ -126,9 +136,9 @@ def log(msg: str, type: int):
 
     elif type == 2:
         # running
-        print(f"{Co.END}{str(now)} | [{Co.LIGHT_CYAN} EXEC {Co.END}] {Co.END}{msg}")
+        print(f"{Co.END}{str(now)} | [{Co.LIGHT_WHITE} EXEC {Co.END}] {Co.END}{msg}")
     elif type == 3:
-        print(f"{Co.END}{str(now)} | [{Co.LIGHT_PURPLE} INFO {Co.END}] {Co.END}{msg}")
+        print(f"{Co.END}{str(now)} | [{Co.LIGHT_WHITE} INFO {Co.END}] {Co.END}{msg}")
     else:
         print("what")
     
@@ -146,9 +156,6 @@ if __name__ == "__main__":
         follow(cookies)
         log("follow successful", 0)
 
-        log("running unfollow...", 2)
-        unfollow(cookies)
-        log("unfollow successful", 0)
 
         log("running get_followers...", 2)
         get_followers(cookies)
@@ -157,6 +164,11 @@ if __name__ == "__main__":
         log("running get_following...", 2)
         get_following(cookies)
         log("get_following successful", 0)
+
+        log("running unfollow...", 2)
+        unfollow(cookies)
+        log("unfollow successful", 0)
+
 
     except Exception as e:
         log("An error occured", 1)
