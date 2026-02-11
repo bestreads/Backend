@@ -14,3 +14,12 @@ func SetFollow(ctx context.Context, this_id uint, other_id uint, unfollow bool) 
 	}
 
 }
+
+func GetFollow(ctx context.Context, uid uint, following bool) ([]uint, error) {
+	if following {
+		return repositories.GetFollowing(ctx, uid)
+	} else {
+		return repositories.GetFollowers(ctx, uid)
+	}
+
+}

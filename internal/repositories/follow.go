@@ -5,6 +5,7 @@ import (
 
 	"github.com/bestreads/Backend/internal/database"
 	"github.com/bestreads/Backend/internal/middlewares"
+	"github.com/bestreads/Backend/internal/repositories/generated"
 	"gorm.io/gorm"
 )
 
@@ -18,4 +19,22 @@ func Stopfollow(ctx context.Context, this_id uint, other_id uint) error {
 		Where("user_id = ? AND following_id = ?", this_id, other_id).
 		Delete(ctx)
 	return err
+}
+
+func GetFollowing(ctx context.Context, uid uint) ([]uint, error) {
+	return generated.Query[database.FollowRel](middlewares.DB(ctx)).GetFollowingGen(ctx, uid)
+}
+
+func GetFollowers(ctx context.Context, uid uint) ([]uint, error) {
+	return generated.Query[database.FollowRel](middlewares.DB(ctx)).GetFollowersGen(ctx, uid)
+}
+
+// magic gorm shit
+// https://gorm.io/docs/the_generics_way.html#Code-Generator-Workflow
+type Query[T any] interface {
+	// SELECT user_id FROM @@table WHERE following_id=@uid
+	GetFollowersGen(ctx context.Context, uid uint) ([]uint, error)
+
+	// SELECT following_id FROM @@table WHERE user_id=@uid
+	GetFollowingGen(ctx context.Context, uid uint) ([]uint, error)
 }
