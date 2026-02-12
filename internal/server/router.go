@@ -64,6 +64,7 @@ func setRoutes(cfg *config.Config, log zerolog.Logger, app *fiber.App) {
 	v1userProtected.Get("/", handlers.GetOwnUser)
 	v1userProtected.Put("/", handlers.ChangeUserData)
 	v1userProtected.Get("/:id", handlers.GetUserProfile)
+	v1userProtected.Delete("/", handlers.DeleteUser)
 
 	// library
 	// ?limit=n
