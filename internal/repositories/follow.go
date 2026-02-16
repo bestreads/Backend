@@ -31,6 +31,7 @@ func GetFollowers(ctx context.Context, uid uint) ([]uint, error) {
 
 // magic gorm shit
 // https://gorm.io/docs/the_generics_way.html#Code-Generator-Workflow
+// tl;dr: ~/go/bin/gorm gen -i ./internal/repositories/follow.go -o internal/repositories/generated
 type Query[T any] interface {
 	// SELECT user_id FROM @@table WHERE following_id=@uid
 	GetFollowersGen(ctx context.Context, uid uint) ([]uint, error)
