@@ -44,12 +44,11 @@ PASSWORD = "test1234567890"
 
 # follow-tests
 FOLLOW_ID = 10
-GET_FOLLOW_TARGET = 10
-
 
 #############
 #   tests   # 
 #############
+_MY_ID = None
 
 
 def healtcheck():
@@ -65,7 +64,7 @@ def login() -> List[dict]:
     tokens = {}
     
     if resp.status_code != 200:
-        raise Exception(f"failed to login, code {res.status}, msg: {body}")
+        raise Exception(f"failed to login, code {resp.status_code}, msg: {body}")
 
 
     for h in resp.headers:
@@ -74,10 +73,26 @@ def login() -> List[dict]:
     if len(tokens) == 0:
         raise Exception("no tokens found :(")
 
+
     log(f"tokens: {len(tokens)}", 3)
 
     return tokens
-    
+
+def get_user(tokens: dict[str]):
+    headers = {"Host": HOST}
+    headers['Cookie'] = tokens['Cookie']
+
+    resp = requests.get(url=f"http://{HOST}{API_PATH}/user", headers=headers)
+
+    if resp.status_code != 200:
+        raise Exception(f"failed to get user information: {resp.status_code}; body: {resp.text}")
+    else:
+        global _MY_ID
+        _MY_ID = int(json.loads(resp.text)['userId'])
+        log(f"logged in as: {_MY_ID}", 3)
+
+
+
 def follow(tokens: dict[str]):
     headers = {"Host": HOST}
     headers['Cookie'] = tokens['Cookie']
@@ -104,23 +119,23 @@ def get_followers(tokens: dict[str]):
     headers = {"Host": HOST}
     headers['Cookie'] = tokens['Cookie']
 
-    resp = requests.get(url=f"http://{HOST}{API_PATH}/user/{GET_FOLLOW_TARGET}/followers", headers=headers)
+    resp = requests.get(url=f"http://{HOST}{API_PATH}/user/{FOLLOW_ID}/followers", headers=headers)
 
     if resp.status_code != 200:
         raise Exception(f"failed to get follower list: {resp.status_code}; body: {resp.text}")
     else:
-        log(f"{resp.text}", 3)
+        log(f"{FOLLOW_ID} is being followed by: {resp.text}", 3)
 
 def get_following(tokens: dict[str]):
     headers = {"Host": HOST}
     headers['Cookie'] = tokens['Cookie']
 
-    resp = requests.get(url=f"http://{HOST}{API_PATH}/user/{GET_FOLLOW_TARGET}/following", headers=headers)
+    resp = requests.get(url=f"http://{HOST}{API_PATH}/user/{_MY_ID}/following", headers=headers)
 
     if resp.status_code != 200:
         raise Exception(f"failed to get follower list: {resp.status_code}; body: {resp.text}")
     else:
-        log(f"{resp.text}", 3)
+        log(f"{_MY_ID} is following: {resp.text}", 3)
 
     
 
@@ -151,6 +166,11 @@ if __name__ == "__main__":
         log("running login...", 2)
         cookies = login()
         log("login successful", 0)
+
+        log("running getuser...", 2)
+        get_user(cookies)
+        log("getuser successful", 0)
+
 
         log("running follow...", 2)
         follow(cookies)
