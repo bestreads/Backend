@@ -12,6 +12,7 @@ require (
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/viper v1.21.0
 	github.com/swaggo/swag v1.16.6
+	gorm.io/cli/gorm v0.2.4
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.1
 	resty.dev/v3 v3.0.0-beta.4
@@ -37,6 +38,7 @@ require (
 	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/swaggo/files/v2 v2.0.2 // indirect
 	github.com/tinylib/msgp v1.6.3 // indirect
+	golang.org/x/exp v0.0.0-20240112132812-db7319d0e0e3 // indirect
 	golang.org/x/mod v0.32.0 // indirect
 	golang.org/x/tools v0.41.0 // indirect
 )

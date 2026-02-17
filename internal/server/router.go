@@ -60,10 +60,13 @@ func setRoutes(cfg *config.Config, log zerolog.Logger, app *fiber.App) {
 
 	// --- Protected routes ---
 
+	// user
 	v1userProtected := v1Protected.Group("/user")
 	v1userProtected.Get("/", handlers.GetOwnUser)
 	v1userProtected.Put("/", handlers.ChangeUserData)
 	v1userProtected.Get("/:id", handlers.GetUserProfile)
+	v1userProtected.Get("/:id/followers", handlers.GetFollowers)
+	v1userProtected.Get("/:id/following", handlers.GetFollowing)
 	v1userProtected.Delete("/", handlers.DeleteUser)
 
 	// library
@@ -79,15 +82,21 @@ func setRoutes(cfg *config.Config, log zerolog.Logger, app *fiber.App) {
 	v1booksProtected.Get("/search", handlers.BookSearch)
 	v1booksProtected.Get("/:bid", handlers.GetBook)
 
+	// posts
 	// ?limit=n
 	v1Protected.Get("/post", handlers.GetPost)
 	v1Protected.Post("/post", handlers.CreatePost)
 	v1Protected.Delete("/post", handlers.DeletePost)
 	v1Protected.Put("/post", handlers.CreatePost)
 
+	// media
 	v1mediaProtected := v1Protected.Group("/media")
-	// ?type=0|1|2
 	v1mediaProtected.Put("/", handlers.SaveFile)
-	// ?type=0|1|2
 	v1mediaProtected.Get("/:KEY", handlers.GetFile)
+
+	// follow
+	// ?id=n
+	v1Protected.Post("/follow", handlers.StartFollow)
+	// ?id=n
+	v1Protected.Delete("/follow", handlers.StopFollow)
 }
