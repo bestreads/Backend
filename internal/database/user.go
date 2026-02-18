@@ -12,4 +12,5 @@ type User struct {
 	Password_hash  string
 	Username       string `gorm:"not null"`
 	ProfilePicture string
+	Description    string
 }
