@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"io"
+	"mime/multipart"
 	"strconv"
 
 	"github.com/bestreads/Backend/internal/dtos"
@@ -10,8 +12,11 @@ import (
 	"github.com/bestreads/Backend/internal/services"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog"
 	"gorm.io/gorm"
 )
+
+const MAX_UPLOAD_SZ = 5 << 20 // 5mb
 
 func GetUserProfile(c *fiber.Ctx) error {
 	ctx := c.UserContext()
@@ -79,84 +84,52 @@ func ChangeUserData(c *fiber.Ctx) error {
 	payload.Email = c.FormValue("email")
 	payload.Username = c.FormValue("username")
 	payload.Password = c.FormValue("password")
+	payload.Description = c.FormValue("description")
 
 	// Handle Profilbild-Upload
 	file, err := c.FormFile("profile_picture")
 	if err != nil && !errors.Is(err, fiber.ErrUnprocessableEntity) && err.Error() != "there is no uploaded file associated with the given key" {
-		log.Warn().Err(err).Msg("failed to parse uploaded profile picture")
-		return c.Status(fiber.StatusBadRequest).
-			JSON(dtos.GenericRestErrorResponse{
-				Description: "Failed to parse uploaded file",
-			})
+		return retErr(log, c, fiber.StatusBadRequest, err, "Failed to parse uploaded file")
 	}
 	if file != nil {
-		// Maximale Upload-Größe: 5 MB
-		const maxUploadSize = 5 << 20 // 5 MB
-		if file.Size > maxUploadSize {
-			log.Warn().Int64("size", file.Size).Msg("uploaded file too large")
-			return c.Status(fiber.StatusRequestEntityTooLarge).
-				JSON(dtos.GenericRestErrorResponse{
-					Description: "Profile picture must be smaller than 5 MB",
-				})
-		}
-
-		// Öffne die Datei
-		openedFile, openErr := file.Open()
-		if openErr != nil {
-			log.Warn().Err(openErr).Msg("failed to open uploaded file")
-			return c.Status(fiber.StatusBadRequest).
-				JSON(dtos.GenericRestErrorResponse{
-					Description: "Failed to process uploaded file",
-				})
-		}
-		defer openedFile.Close()
-
-		fileData, err := io.ReadAll(io.LimitReader(openedFile, maxUploadSize+1))
+		fileData, err := getMediaBytes(file)
 		if err != nil {
-			log.Warn().Err(err).Msg("failed to read uploaded file")
-			return c.Status(fiber.StatusBadRequest).
-				JSON(dtos.GenericRestErrorResponse{
-					Description: "Failed to read uploaded file",
-				})
+			return retErr(log, c, fiber.StatusBadRequest, err, "error processing file")
 		}
 		payload.ProfilePicture = fileData
 	}
 
-	// Prüfe ob mindestens ein Feld gesetzt ist
-	if payload.IsEmpty() {
-		return c.Status(fiber.StatusBadRequest).
-			JSON(dtos.GenericRestErrorResponse{
-				Description: "At least one field must be provided",
-			})
-	}
+	// // Prüfe ob mindestens ein Feld gesetzt ist
+	// if payload.IsEmpty() {
+	// 	return retErr(log, c, fiber.StatusBadRequest, fmt.Errorf("payload be empty"), "At least one field must be provided")
+	// }
 
 	// Validierung der Felder
-	if validationErr := validate.Struct(&payload); validationErr != nil {
-		var valErrs validator.ValidationErrors
-		if errors.As(validationErr, &valErrs) {
-			for _, e := range valErrs {
-				if e.Field() == "Email" && e.Tag() == "email" {
-					return c.Status(fiber.StatusBadRequest).
-						JSON(dtos.GenericRestErrorResponse{
-							Description: "Invalid email format",
-						})
-				}
+	// if validationErr := validate.Struct(&payload); validationErr != nil {
+	// 	var valErrs validator.ValidationErrors
+	// 	if errors.As(validationErr, &valErrs) {
+	// 		for _, e := range valErrs {
+	// 			if e.Field() == "Email" && e.Tag() == "email" {
+	// 				// return c.Status(fiber.StatusBadRequest).
+	// 				// 	JSON(dtos.GenericRestErrorResponse{
+	// 				// 		Description: "Invalid email format",
+	// 				// 	})
+	// 			}
 
-				if e.Field() == "Password" && e.Tag() == "min" {
-					return c.Status(fiber.StatusBadRequest).
-						JSON(dtos.GenericRestErrorResponse{
-							Description: "Password must be at least 12 characters long",
-						})
-				}
-			}
-		}
+	// 			if e.Field() == "Password" && e.Tag() == "min" {
+	// 				// return c.Status(fiber.StatusBadRequest).
+	// 				// 	JSON(dtos.GenericRestErrorResponse{
+	// 				// 		Description: "Password must be at least 12 characters long",
+	// 				// 	})
+	// 			}
+	// 		}
+	// 	}
 
-		// Fallback
-		log.Warn().Err(validationErr).Msg("validation failed")
-		return c.Status(fiber.StatusBadRequest).
-			JSON(dtos.GenericRestErrorResponse{
-				Description: "Validation failed",
-			})
+	// 	// Fallback
+	// 	return retErr(log, c, fiber.StatusBadRequest, validationErr, "Validation Failed")
+	// }
+	if c.FormValue("email") != "" {
+		panic("handle email here")
 	}
 
 	// Business Logic im Service
@@ -175,4 +148,25 @@ func ChangeUserData(c *fiber.Ctx) error {
 	}
 
 	return c.SendStatus(fiber.StatusOK)
+}
+
+func getMediaBytes(f *multipart.FileHeader) ([]byte, error) {
+	if f.Size > MAX_UPLOAD_SZ {
+		return []byte{}, fmt.Errorf("file too large")
+	}
+
+	open, err := f.Open()
+	bytes, err := io.ReadAll(open)
+	if err != nil {
+		return []byte{}, err
+	} else {
+		return bytes, nil
+	}
+}
+
+func retErr(log zerolog.Logger, c *fiber.Ctx, t int, err error, msg string) error {
+	log.Error().Err(err).Msg(msg)
+	return c.Status(t).JSON(dtos.GenericRestErrorResponse{
+		Description: msg,
+	})
 }
