@@ -26,6 +26,18 @@ func GetUserById(ctx context.Context, userId uint) (*dtos.OwnProfileResponse, er
 		return nil, countPostsErr
 	}
 
+	// Get followers count
+	countFollowers, countFollowersErr := repositories.CountFollowers(ctx, userId)
+	if countFollowersErr != nil {
+		return nil, countFollowersErr
+	}
+
+	// Get following count
+	countFollowing, countFollowingErr := repositories.CountFollowing(ctx, userId)
+	if countFollowingErr != nil {
+		return nil, countFollowingErr
+	}
+
 	user := dtos.OwnProfileResponse{
 		ProfileResponse: dtos.ProfileResponse{
 			UserID:               userId,
@@ -34,6 +46,8 @@ func GetUserById(ctx context.Context, userId uint) (*dtos.OwnProfileResponse, er
 			AccountCreatedAtYear: uint(userObj.CreatedAt.Year()),
 			BooksInLibrary:       uint(countBooks),
 			Posts:                uint(countPosts),
+			FollowersCount:       uint(countFollowers),
+			FollowingCount:       uint(countFollowing),
 		},
 		Email: userObj.Email,
 	}

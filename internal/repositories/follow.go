@@ -29,6 +29,18 @@ func GetFollowers(ctx context.Context, uid uint) ([]uint, error) {
 	return generated.Query[database.FollowRel](middlewares.DB(ctx)).GetFollowersGen(ctx, uid)
 }
 
+func CountFollowers(ctx context.Context, uid uint) (int64, error) {
+	var count int64
+	err := middlewares.DB(ctx).Model(&database.FollowRel{}).Where("following_id = ?", uid).Count(&count).Error
+	return count, err
+}
+
+func CountFollowing(ctx context.Context, uid uint) (int64, error) {
+	var count int64
+	err := middlewares.DB(ctx).Model(&database.FollowRel{}).Where("user_id = ?", uid).Count(&count).Error
+	return count, err
+}
+
 // magic gorm shit
 // https://gorm.io/docs/the_generics_way.html#Code-Generator-Workflow
 // tl;dr: ~/go/bin/gorm gen -i ./internal/repositories/follow.go -o internal/repositories/generated
