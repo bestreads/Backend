@@ -7,6 +7,7 @@ type ProfileResponse struct {
 	AccountCreatedAtYear uint   `json:"accountCreatedAtYear"`
 	BooksInLibrary       uint   `json:"booksInLibrary"`
 	Posts                uint   `json:"posts"`
+	Description          string `json:"description"`
 }
 
 type OwnProfileResponse struct {

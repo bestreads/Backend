@@ -99,35 +99,29 @@ func ChangeUserData(c *fiber.Ctx) error {
 		payload.ProfilePicture = fileData
 	}
 
-	// // Prüfe ob mindestens ein Feld gesetzt ist
-	// if payload.IsEmpty() {
-	// 	return retErr(log, c, fiber.StatusBadRequest, fmt.Errorf("payload be empty"), "At least one field must be provided")
-	// }
+	// Prüfe ob mindestens ein Feld gesetzt ist
+	if payload.IsEmpty() {
+		return retErr(log, c, fiber.StatusBadRequest, fmt.Errorf("payload be empty"), "At least one field must be provided")
+	}
 
 	// Validierung der Felder
-	// if validationErr := validate.Struct(&payload); validationErr != nil {
-	// 	var valErrs validator.ValidationErrors
-	// 	if errors.As(validationErr, &valErrs) {
-	// 		for _, e := range valErrs {
-	// 			if e.Field() == "Email" && e.Tag() == "email" {
-	// 				// return c.Status(fiber.StatusBadRequest).
-	// 				// 	JSON(dtos.GenericRestErrorResponse{
-	// 				// 		Description: "Invalid email format",
-	// 				// 	})
-	// 			}
+	if validationErr := validate.Struct(&payload); validationErr != nil {
+		var valErrs validator.ValidationErrors
+		if errors.As(validationErr, &valErrs) {
+			for _, e := range valErrs {
+				if e.Field() == "Email" && e.Tag() == "email" {
+					return retErr(log, c, fiber.StatusBadRequest, fmt.Errorf("bad email"), "invalid email format")
+				}
 
-	// 			if e.Field() == "Password" && e.Tag() == "min" {
-	// 				// return c.Status(fiber.StatusBadRequest).
-	// 				// 	JSON(dtos.GenericRestErrorResponse{
-	// 				// 		Description: "Password must be at least 12 characters long",
-	// 				// 	})
-	// 			}
-	// 		}
-	// 	}
+				if e.Field() == "Password" && e.Tag() == "min" {
+					return retErr(log, c, fiber.StatusBadRequest, fmt.Errorf("bad password"), "invalid password format")
+				}
+			}
+		}
 
-	// 	// Fallback
-	// 	return retErr(log, c, fiber.StatusBadRequest, validationErr, "Validation Failed")
-	// }
+		// Fallback
+		return retErr(log, c, fiber.StatusBadRequest, validationErr, "Validation Failed")
+	}
 	if c.FormValue("email") != "" {
 		panic("handle email here")
 	}
