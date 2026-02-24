@@ -8,6 +8,8 @@ type ProfileResponse struct {
 	BooksInLibrary       uint   `json:"booksInLibrary"`
 	Posts                uint   `json:"posts"`
 	Description          string `json:"description"`
+	FollowersCount       uint   `json:"followersCount"`
+	FollowingCount       uint   `json:"followingCount"`
 }
 
 type OwnProfileResponse struct {
