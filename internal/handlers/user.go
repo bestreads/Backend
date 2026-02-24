@@ -100,6 +100,8 @@ func ChangeUserData(c *fiber.Ctx) error {
 	}
 
 	// Prüfe ob mindestens ein Feld gesetzt ist
+	// das geht schon in richtung "shotgun parser"
+	// TODO: vernünftiger parser
 	if payload.IsEmpty() {
 		return retErr(log, c, fiber.StatusBadRequest, fmt.Errorf("payload be empty"), "At least one field must be provided")
 	}

@@ -9,6 +9,7 @@ type UpdateUserRequest struct {
 }
 
 // IsEmpty prüft ob alle Felder leer sind
+// flaky check
 func (u *UpdateUserRequest) IsEmpty() bool {
-	return u.Email == "" && u.Username == "" && u.Password == "" && len(u.ProfilePicture) == 0
+	return u.Email == "" && u.Username == "" && u.Password == "" && len(u.ProfilePicture) == 0 && u.Description == ""
 }
