@@ -46,6 +46,7 @@ func GetUserById(ctx context.Context, userId uint) (*dtos.OwnProfileResponse, er
 			AccountCreatedAtYear: uint(userObj.CreatedAt.Year()),
 			BooksInLibrary:       uint(countBooks),
 			Posts:                uint(countPosts),
+			Description:          userObj.Description,
 			FollowersCount:       uint(countFollowers),
 			FollowingCount:       uint(countFollowing),
 		},
