@@ -84,7 +84,12 @@ func ChangeUserData(c *fiber.Ctx) error {
 	payload.Email = c.FormValue("email")
 	payload.Username = c.FormValue("username")
 	payload.Password = c.FormValue("password")
-	payload.Description = c.FormValue("description")
+	// Description: nil = nicht gesendet, "" = bewusst leeren
+	if form, err := c.MultipartForm(); err == nil && form != nil {
+		if vals, ok := form.Value["description"]; ok && len(vals) > 0 {
+			payload.Description = &vals[0]
+		}
+	}
 
 	// Handle Profilbild-Upload
 	file, err := c.FormFile("profile_picture")
