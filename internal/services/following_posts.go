@@ -31,7 +31,7 @@ func translatePostsToPostResponses(posts []database.Post) ([]dtos.PostResponse, 
 			Uid:            post.User.ID,
 			Book:           post.Book,
 			Content:        post.Content,
-			CreatedAt:      post.UpdatedAt,
+			CreatedAt:      post.CreatedAt,
 			State:          post.State,
 			Rating:         post.Rating,
 		}
