@@ -51,8 +51,9 @@ func UpdateUser(ctx context.Context, userId uint, req dtos.UpdateUserRequest) er
 		user.Password_hash = passwordHash
 	}
 
-	// hier ist es egal, ob der string leer ist
-	user.Description = req.Description
+	if req.Description != nil {
+		user.Description = *req.Description
+	}
 
 	// Prüfe, ob die neue E-Mail oder der neue Benutzername bereits von einem anderen Benutzer verwendet wird
 	conflict, err := repositories.CheckUserUniqueness(ctx, user.ID, req.Username, req.Email)
