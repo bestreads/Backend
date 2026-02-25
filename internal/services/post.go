@@ -26,6 +26,7 @@ func convert(p []database.Post) ([]dtos.PostResponse, error) {
 			ProfilePicture: post.User.ProfilePicture,
 			Username:       post.User.Username,
 			Uid:            post.User.ID,
+			BookID:         post.Book.ID,
 			Book:           post.Book,
 			Content:        post.Content,
 			CreatedAt:      post.UpdatedAt,

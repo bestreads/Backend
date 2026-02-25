@@ -4,20 +4,21 @@ import (
 	"context"
 
 	"github.com/bestreads/Backend/internal/database"
+	"github.com/bestreads/Backend/internal/dtos"
 	"github.com/bestreads/Backend/internal/middlewares"
 )
 
-func GetFollowingPostsFeed(ctx context.Context, userId uint, offset int) ([]database.Post, error) {
+func GetFollowingPostsFeed(ctx context.Context, userId uint, offset int) ([]dtos.PostResponse, error) {
 	db := middlewares.DB(ctx)
 	cfg := middlewares.Config(ctx)
 
-	var posts []database.Post
+	var posts []dtos.PostResponse
 
 	query := db.Model(&database.Post{}).
-		Select("posts.*, libraries.state AS state, libraries.rating AS rating").
+		Select("users.profile_picture AS profile_picture, users.username AS username, users.id AS uid, posts.book_id AS book_id, posts.content AS content, posts.created_at AS created_at, libraries.state AS state, libraries.rating AS rating").
+		Joins("INNER JOIN users ON users.id = posts.user_id").
 		Joins("LEFT JOIN libraries ON libraries.user_id = posts.user_id AND libraries.book_id = posts.book_id").
 		Joins("INNER JOIN follow_rels ON follow_rels.following_id = posts.user_id").
-		Preload("User").
 		Preload("Book").
 		Where("follow_rels.user_id = ?", userId).
 		Order("posts.updated_at DESC").
