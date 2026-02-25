@@ -13,7 +13,7 @@ type PostResponse struct {
 	BookID         uint
 	Book           database.Book
 	Content        string
-	CreatedAt      time.Time
+	UpdatedAt      time.Time
 	State          database.ReadState
 	Rating         uint
 }

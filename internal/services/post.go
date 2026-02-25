@@ -29,7 +29,7 @@ func convert(p []database.Post) ([]dtos.PostResponse, error) {
 			BookID:         post.Book.ID,
 			Book:           post.Book,
 			Content:        post.Content,
-			CreatedAt:      post.UpdatedAt,
+			UpdatedAt:      post.UpdatedAt,
 			State:          post.State,
 			Rating:         post.Rating,
 		}
