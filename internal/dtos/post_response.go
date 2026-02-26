@@ -10,9 +10,10 @@ type PostResponse struct {
 	ProfilePicture string
 	Username       string
 	Uid            uint
+	BookID         uint
 	Book           database.Book
 	Content        string
-	CreatedAt      time.Time
+	UpdatedAt      time.Time
 	State          database.ReadState
 	Rating         uint
 }
